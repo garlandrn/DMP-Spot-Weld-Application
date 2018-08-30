@@ -28,10 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.OK_Button = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.Reset_Timer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // OK_Button
@@ -57,11 +55,6 @@
             this.label1.Text = "Component Missing\r\nPlease Verify\r\nLast Weld";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // Reset_Timer
-            // 
-            this.Reset_Timer.Interval = 1000;
-            this.Reset_Timer.Tick += new System.EventHandler(this.Reset_Timer_Tick);
-            // 
             // User_Program_Part_Not_Completed
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -85,6 +78,5 @@
 
         private System.Windows.Forms.Button OK_Button;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Timer Reset_Timer;
     }
 }

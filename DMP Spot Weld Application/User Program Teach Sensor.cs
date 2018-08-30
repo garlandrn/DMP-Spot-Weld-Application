@@ -56,7 +56,7 @@ namespace DMP_Spot_Weld_Application
         private List<Item> OPC_WriteSensor = new List<Item>();
 
         // Tag String
-        private static string Spotweld_Tag_Name = "";
+        private static string SpotWeld_Tag_Name = "";
 
         // Variable for Input Value
         private static int OPC_TeachSensorValue;
@@ -187,7 +187,7 @@ namespace DMP_Spot_Weld_Application
         {
             Opc.Da.Item[] OPC_SensorWrite = new Opc.Da.Item[1];
             OPC_SensorWrite[0] = new Opc.Da.Item();
-            OPC_SensorWrite[0].ItemName = Spotweld_Tag_Name + "HMI_PB_TEACH_SENSOR";
+            OPC_SensorWrite[0].ItemName = SpotWeld_Tag_Name + "HMI_PB_TEACH_SENSOR";
             OPC_WriteSensor.Add(OPC_SensorWrite[0]);
             TeachSensor_Write.AddItems(OPC_WriteSensor.ToArray());
 
@@ -204,13 +204,13 @@ namespace DMP_Spot_Weld_Application
         {
             Opc.Da.Item[] OPC_CompOneWrite = new Opc.Da.Item[4];
             OPC_CompOneWrite[0] = new Opc.Da.Item();
-            OPC_CompOneWrite[0].ItemName = Spotweld_Tag_Name + "HMI_Operation_One_PB";
+            OPC_CompOneWrite[0].ItemName = SpotWeld_Tag_Name + "HMI_Operation_One_PB";
             OPC_CompOneWrite[1] = new Opc.Da.Item();
-            OPC_CompOneWrite[1].ItemName = Spotweld_Tag_Name + "HMI_Operation_Two_PB";
+            OPC_CompOneWrite[1].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Two_PB";
             OPC_CompOneWrite[2] = new Opc.Da.Item();
-            OPC_CompOneWrite[2].ItemName = Spotweld_Tag_Name + "HMI_Operation_Three_PB";
+            OPC_CompOneWrite[2].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Three_PB";
             OPC_CompOneWrite[3] = new Opc.Da.Item();
-            OPC_CompOneWrite[3].ItemName = Spotweld_Tag_Name + "HMI_Operation_Four_PB";
+            OPC_CompOneWrite[3].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Four_PB";
             OPC_CompOneWrite = GroupWriteCompOne.AddItems(OPC_CompOneWrite);
 
 
@@ -236,13 +236,13 @@ namespace DMP_Spot_Weld_Application
         {
             Opc.Da.Item[] OPC_CompWrite = new Opc.Da.Item[4];
             OPC_CompWrite[0] = new Opc.Da.Item();
-            OPC_CompWrite[0].ItemName = Spotweld_Tag_Name + "HMI_Operation_One_PB";
+            OPC_CompWrite[0].ItemName = SpotWeld_Tag_Name + "HMI_Operation_One_PB";
             OPC_CompWrite[1] = new Opc.Da.Item();
-            OPC_CompWrite[1].ItemName = Spotweld_Tag_Name + "HMI_Operation_Two_PB";
+            OPC_CompWrite[1].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Two_PB";
             OPC_CompWrite[2] = new Opc.Da.Item();
-            OPC_CompWrite[2].ItemName = Spotweld_Tag_Name + "HMI_Operation_Three_PB";
+            OPC_CompWrite[2].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Three_PB";
             OPC_CompWrite[3] = new Opc.Da.Item();
-            OPC_CompWrite[3].ItemName = Spotweld_Tag_Name + "HMI_Operation_Four_PB";
+            OPC_CompWrite[3].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Four_PB";
             OPC_CompWrite = GroupWriteCompTwo.AddItems(OPC_CompWrite);
 
             Opc.Da.ItemValue[] WriteCompTwoValue = new Opc.Da.ItemValue[4];
@@ -267,13 +267,13 @@ namespace DMP_Spot_Weld_Application
         {
             Opc.Da.Item[] OPC_CompThreeWrite = new Opc.Da.Item[4];
             OPC_CompThreeWrite[0] = new Opc.Da.Item();
-            OPC_CompThreeWrite[0].ItemName = Spotweld_Tag_Name + "HMI_Operation_One_PB";
+            OPC_CompThreeWrite[0].ItemName = SpotWeld_Tag_Name + "HMI_Operation_One_PB";
             OPC_CompThreeWrite[1] = new Opc.Da.Item();
-            OPC_CompThreeWrite[1].ItemName = Spotweld_Tag_Name + "HMI_Operation_Two_PB";
+            OPC_CompThreeWrite[1].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Two_PB";
             OPC_CompThreeWrite[2] = new Opc.Da.Item();
-            OPC_CompThreeWrite[2].ItemName = Spotweld_Tag_Name + "HMI_Operation_Three_PB";
+            OPC_CompThreeWrite[2].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Three_PB";
             OPC_CompThreeWrite[3] = new Opc.Da.Item();
-            OPC_CompThreeWrite[3].ItemName = Spotweld_Tag_Name + "HMI_Operation_Four_PB";
+            OPC_CompThreeWrite[3].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Four_PB";
             OPC_CompThreeWrite = GroupWriteCompThree.AddItems(OPC_CompThreeWrite);
 
             Opc.Da.ItemValue[] WriteCompThreeValue = new Opc.Da.ItemValue[4];
@@ -300,31 +300,31 @@ namespace DMP_Spot_Weld_Application
             List<Item> OPC_ItemsList = new List<Item>();
             Opc.Da.Item[] OPC_ItemID = new Opc.Da.Item[9];
             OPC_ItemID[0] = new Opc.Da.Item();
-            OPC_ItemID[0].ItemName = Spotweld_Tag_Name + "HMI_PROBE_VALUE";
+            OPC_ItemID[0].ItemName = SpotWeld_Tag_Name + "HMI_PROBE_VALUE";
             OPC_ItemsList.Add(OPC_ItemID[0]);
             OPC_ItemID[1] = new Opc.Da.Item();
-            OPC_ItemID[1].ItemName = Spotweld_Tag_Name + "TARGET_TRAVEL_VALUE";
+            OPC_ItemID[1].ItemName = SpotWeld_Tag_Name + "TARGET_TRAVEL_VALUE";
             OPC_ItemsList.Add(OPC_ItemID[1]);
             OPC_ItemID[2] = new Opc.Da.Item();
-            OPC_ItemID[2].ItemName = Spotweld_Tag_Name + "MULTI_COMPONENT_TARGET2";
+            OPC_ItemID[2].ItemName = SpotWeld_Tag_Name + "MULTI_COMPONENT_TARGET2";
             OPC_ItemsList.Add(OPC_ItemID[2]);
             OPC_ItemID[3] = new Opc.Da.Item();
-            OPC_ItemID[3].ItemName = Spotweld_Tag_Name + "MULTI_COMPONENT_TARGET3";
+            OPC_ItemID[3].ItemName = SpotWeld_Tag_Name + "MULTI_COMPONENT_TARGET3";
             OPC_ItemsList.Add(OPC_ItemID[3]);
             OPC_ItemID[4] = new Opc.Da.Item();
-            OPC_ItemID[4].ItemName = Spotweld_Tag_Name + "MULTI_COMPONENT_TARGET4";
+            OPC_ItemID[4].ItemName = SpotWeld_Tag_Name + "MULTI_COMPONENT_TARGET4";
             OPC_ItemsList.Add(OPC_ItemID[4]);
             OPC_ItemID[5] = new Opc.Da.Item();
-            OPC_ItemID[5].ItemName = Spotweld_Tag_Name + "TARGET_TRAVEL_VALUE_SET";
+            OPC_ItemID[5].ItemName = SpotWeld_Tag_Name + "TARGET_TRAVEL_VALUE_SET";
             OPC_ItemsList.Add(OPC_ItemID[5]);
             OPC_ItemID[6] = new Opc.Da.Item();
-            OPC_ItemID[6].ItemName = Spotweld_Tag_Name + "SEQUENCE_ONE_SET";
+            OPC_ItemID[6].ItemName = SpotWeld_Tag_Name + "SEQUENCE_ONE_SET";
             OPC_ItemsList.Add(OPC_ItemID[6]);
             OPC_ItemID[7] = new Opc.Da.Item();
-            OPC_ItemID[7].ItemName = Spotweld_Tag_Name + "SEQUENCE_TWO_SET";
+            OPC_ItemID[7].ItemName = SpotWeld_Tag_Name + "SEQUENCE_TWO_SET";
             OPC_ItemsList.Add(OPC_ItemID[7]);
             OPC_ItemID[8] = new Opc.Da.Item();
-            OPC_ItemID[8].ItemName = Spotweld_Tag_Name + "SEQUENCE_THREE_SET";
+            OPC_ItemID[8].ItemName = SpotWeld_Tag_Name + "SEQUENCE_THREE_SET";
             OPC_ItemsList.Add(OPC_ItemID[8]);
             Sensor_Read.AddItems(OPC_ItemsList.ToArray());
         }
@@ -763,6 +763,7 @@ namespace DMP_Spot_Weld_Application
         *********************************************************************************************************************/
         #region
 
+        // Check the Component Text Boxes for Text to Find Components
         private void CheckComponentValue()
         {
             if (Component_2_TextBox.Text == "")
@@ -779,6 +780,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
+        // Set the SpotWeld_Tag_Name
         private void SpotWeldID()
         {
             string SpotWeldComputerID = System.Environment.MachineName;
@@ -786,46 +788,46 @@ namespace DMP_Spot_Weld_Application
             // CAT Spot Weld
             if (SpotWeldComputerID == "123R") // CAT - 123R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_123R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_123R.Global.";
             }
             if (SpotWeldComputerID == "1088") // CAT - 1088
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_1088.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_1088.Global.";
             }
             // John Deere Spot Weld
             if (SpotWeldComputerID == "108R") // John Deere - 108R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_108R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_108R.Global.";
             }
             if (SpotWeldComputerID == "150R") // John Deere - 150R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_150R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_150R.Global.";
             }
             // Navistar
             if (SpotWeldComputerID == "104R") // Navistar - 104R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_104R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_104R.Global.";
             }
             if (SpotWeldComputerID == "OHN7149") // Navistar - 121R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
             }
             if (SpotWeldComputerID == "OHN7111") // Navistar - 154R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_154R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_154R.Global.";
             }
             // Paccar
             if (SpotWeldComputerID == "OHN7124") // Paccar - 153R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_153R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_153R.Global.";
             }
             if (SpotWeldComputerID == "OHN7123") // Paccar - 155R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_155R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_155R.Global.";
             }
             if (SpotWeldComputerID == "OHN7047NL") //  My Laptop
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
             }
         }
 

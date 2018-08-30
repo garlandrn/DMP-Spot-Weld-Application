@@ -8,65 +8,97 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+/*
+ * Program: DMP Spot Weld Application
+ * Form: User Program Part Not Completed
+ * Created By: Ryan Garland
+ * Last Updated on 8/30/18
+ * 
+ */
+
 namespace DMP_Spot_Weld_Application
 {
     public partial class User_Program_Part_Not_Completed : Form
     {
+        BackgroundWorker FaultOff;
+
         public User_Program_Part_Not_Completed()
         {
             InitializeComponent();
             OK_Button.DialogResult = DialogResult.Yes;
             this.ShowInTaskbar = false;
+            // 
+            FaultOff = new BackgroundWorker();
+            FaultOff.DoWork += new DoWorkEventHandler(ConfirmFaultReset_Off_OPC);
+            FaultOff.RunWorkerCompleted += new RunWorkerCompletedEventHandler(FaultOff_RunWorkerCompleted);
         }
 
-        private Opc.URL OPCUrl;
+        // Connect To Server on Form Load
         private Opc.Da.Server OPCServer;
         private OpcCom.Factory OPCFactory = new OpcCom.Factory();
+
+        // ConfirmFaultReset_Off_OPC Method
         private Opc.Da.Subscription Fault_Off_Write;
         private Opc.Da.SubscriptionState Fault_Off_StateWrite;
-        private Opc.Da.Subscription Fault_On_Write;
-        private Opc.Da.SubscriptionState Fault_On_StateWrite;
+
+        // PLC Tag Name
         private static string Spotweld_Tag_Name = "";
 
-        private void OK_Button_Click(object sender, EventArgs e)
+        // Not Used
+        private Opc.Da.Subscription Fault_On_Write;
+        private Opc.Da.SubscriptionState Fault_On_StateWrite;
+
+        // Form Loads. 
+        // Checks Spot Weld Computer. 
+        // Connects to OPC Server
+        private void User_Program_Part_Not_Completed_Load(object sender, EventArgs e)
         {
-            ConfirmFaultReset_Off_OPC();
-            //OPCServer.Disconnect();
-            //User_Program.UserProgram.Enabled = true;            
-            //this.Close();
+            SpotWeldID();
+            OPCServer = new Opc.Da.Server(OPCFactory, null);
+            OPCServer.Url = new Opc.URL("opcda://OHN66OPC/Kepware.KEPServerEX.V6");
+            OPCServer.Connect();
+
+            Fault_Off_StateWrite = new Opc.Da.SubscriptionState();
+            Fault_Off_StateWrite.Name = "PB_Reset_Off_Fault";
+            Fault_Off_StateWrite.Active = true;
+            Fault_Off_Write = (Opc.Da.Subscription)OPCServer.CreateSubscription(Fault_Off_StateWrite);
+
+            Fault_On_StateWrite = new Opc.Da.SubscriptionState();
+            Fault_On_StateWrite.Name = "PB_Reset_On_Fault";
+            Fault_On_StateWrite.Active = true;
+            Fault_On_Write = (Opc.Da.Subscription)OPCServer.CreateSubscription(Fault_On_StateWrite);
         }
 
-        private void ConfirmFaultReset_Off_OPC()
+        // Start The FaultOff Background Worker
+        private void OK_Button_Click(object sender, EventArgs e)
+        {
+            FaultOff.RunWorkerAsync(); // Run ConfirmFaultReset_Off_OPC Method
+
+        }
+
+        // Set the Fault Value in the PLC back to 0
+        private void ConfirmFaultReset_Off_OPC(object sender, EventArgs e)
         {
             Opc.Da.Item[] OPC_Fault_Off = new Opc.Da.Item[1];
             OPC_Fault_Off[0] = new Opc.Da.Item();
-            OPC_Fault_Off[0].ItemName = Spotweld_Tag_Name + "HMI_PB_Alarm_Reset";
+            OPC_Fault_Off[0].ItemName = Spotweld_Tag_Name + "Fault";
             OPC_Fault_Off = Fault_Off_Write.AddItems(OPC_Fault_Off);
 
             Opc.Da.ItemValue[] OPC_ResetValue_Off = new Opc.Da.ItemValue[1];
             OPC_ResetValue_Off[0] = new Opc.Da.ItemValue();
             OPC_ResetValue_Off[0].ServerHandle = Fault_Off_Write.Items[0].ServerHandle;
-            OPC_ResetValue_Off[0].Value = 1;
+            OPC_ResetValue_Off[0].Value = 0;
 
             Opc.IRequest OPCRequest;
             Fault_Off_Write.Write(OPC_ResetValue_Off, 123, new Opc.Da.WriteCompleteEventHandler(WriteCompleteCallback), out OPCRequest);
-            Reset_Timer.Start();
         }
 
-        private void ConfirmFaultReset_On_OPC()
+        // When the Worker is Complete we disconnect from the OPC Server, enable the user program, and close this form
+        private void FaultOff_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            Opc.Da.Item[] OPC_Fault_On = new Opc.Da.Item[1];
-            OPC_Fault_On[0] = new Opc.Da.Item();
-            OPC_Fault_On[0].ItemName = Spotweld_Tag_Name + "HMI_PB_Alarm_Reset";
-            OPC_Fault_On = Fault_On_Write.AddItems(OPC_Fault_On);
-
-            Opc.Da.ItemValue[] OPC_ResetValue_On = new Opc.Da.ItemValue[1];
-            OPC_ResetValue_On[0] = new Opc.Da.ItemValue();
-            OPC_ResetValue_On[0].ServerHandle = Fault_On_Write.Items[0].ServerHandle;
-            OPC_ResetValue_On[0].Value = 0;
-
-            Opc.IRequest OPCRequest;
-            Fault_On_Write.Write(OPC_ResetValue_On, 123, new Opc.Da.WriteCompleteEventHandler(WriteCompleteCallback), out OPCRequest);
+            OPCServer.Disconnect();
+            User_Program.UserProgram.Enabled = true;
+            this.Close();
         }
 
         private void WriteCompleteCallback(object clientHandle, Opc.IdentifiedResult[] results)
@@ -77,6 +109,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
+        // Set the SpotWeld_Tag_Name
         private void SpotWeldID()
         {
             string SpotWeldComputerID = System.Environment.MachineName;
@@ -126,33 +159,6 @@ namespace DMP_Spot_Weld_Application
             {
                 Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
             }
-        }
-
-        private void User_Program_Part_Not_Completed_Load(object sender, EventArgs e)
-        {
-            SpotWeldID();
-            OPCServer = new Opc.Da.Server(OPCFactory, null);
-            OPCServer.Url = new Opc.URL("opcda://OHN66OPC/Kepware.KEPServerEX.V6");
-            OPCServer.Connect();
-
-            Fault_Off_StateWrite = new Opc.Da.SubscriptionState();
-            Fault_Off_StateWrite.Name = "PB_Reset_Off_Fault";
-            Fault_Off_StateWrite.Active = true;
-            Fault_Off_Write = (Opc.Da.Subscription)OPCServer.CreateSubscription(Fault_Off_StateWrite);
-
-            Fault_On_StateWrite = new Opc.Da.SubscriptionState();
-            Fault_On_StateWrite.Name = "PB_Reset_On_Fault";
-            Fault_On_StateWrite.Active = true;
-            Fault_On_Write = (Opc.Da.Subscription)OPCServer.CreateSubscription(Fault_On_StateWrite);
-        }
-
-        private void Reset_Timer_Tick(object sender, EventArgs e)
-        {
-            ConfirmFaultReset_On_OPC();
-            OPCServer.Disconnect();
-            Reset_Timer.Stop();
-            User_Program.UserProgram.Enabled = true;
-            this.Close();
         }
     }    
 }

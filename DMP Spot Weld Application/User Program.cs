@@ -18,7 +18,7 @@ using System.ComponentModel;
  * Program: DMP Spot Weld Application
  * Form: User Program
  * Created By: Ryan Garland
- * Last Updated on 8/28/18
+ * Last Updated on 8/30/18
  * 
  */
 
@@ -249,6 +249,7 @@ namespace DMP_Spot_Weld_Application
         private static bool RunMode_Button_Clicked = false;
         private static bool SetupMode_Button_Clicked = false;
         private static bool TeachSensor_Button_Clicked = false;
+        private static bool PartsComplete_Activate = false;
 
 
         private static string ProgramListUpdate_String = "";
@@ -278,6 +279,8 @@ namespace DMP_Spot_Weld_Application
         private string HMI_Part_Complete = "";
         private string Setup_Mode_Set = "";
         private string[] SpotweldNames = { "121R", "154R", "153R", "155R" };
+
+        User_Program_Part_Not_Completed NotCompleted = new User_Program_Part_Not_Completed();
 
         /********************************************************************************************************************
         * 
@@ -309,7 +312,6 @@ namespace DMP_Spot_Weld_Application
             UserLogin.Open();
             Login.ExecuteNonQuery();
             UserLogin.Close();
-
 
             Clock.Enabled = true;
             LoginTime = Clock_TextBox.Text;
@@ -474,7 +476,7 @@ namespace DMP_Spot_Weld_Application
 
         private void ResetWeldCount_Button_Click(object sender, EventArgs e)
         {
-            User_Program_Reset_Weld_Count_Dialog ResetDialog = new User_Program_Reset_Weld_Count_Dialog(this);
+            User_Program_Reset_Weld_Count_Dialog ResetDialog = new User_Program_Reset_Weld_Count_Dialog();
             ResetDialog.Show();
             UserProgram.Enabled = false;
         }
@@ -500,7 +502,7 @@ namespace DMP_Spot_Weld_Application
         private void RunMode_Button_Click(object sender, EventArgs e)
         {
             SetupModeSet_TextBox.Clear();
-            OPC_Timer.Enabled = true;
+            //OPC_Timer.Enabled = true; // No longer in use
             //OPCStatus_Timer.Enabled = true;
             OPC_RunModeIntValue = 1;
             SystemInRunMode_OPC();
@@ -526,14 +528,15 @@ namespace DMP_Spot_Weld_Application
             RunMode_Button.BackColor = ScanRunModeColor;
             SetupMode_Button.BackColor = Color.Transparent;
             //PartCounterOPC.RunWorkerAsync();
-            PartsCompleted_OPC(null, null);
+            //PartsCompleted_OPC(null, null);
             if (RunMode_Button_Clicked == false)
             {
                 JobStartTime_TextBox.Text = StartingTime.Replace("   " + ReplaceTime, "");
                 RunMode_Button_Clicked = true;
             }
             RunMode_Button_Clicked = true;
-
+            //PartComplete_GroupRead.SetEnabled(true);
+            PartsComplete_Activate = true;
         }
 
         private void TeachSensor_Button_Click(object sender, EventArgs e)
@@ -547,12 +550,14 @@ namespace DMP_Spot_Weld_Application
                 OperationInitialize();
                 SetupMode_Button_Click(null, null);
                 SetupMode_Button.Focus();
+                PartsComplete_Activate = true;
+                PartCounterOPC.RunWorkerAsync();
             }
         }
 
         public void SetupMode_Button_Click(object sender, EventArgs e)
         {
-            OPC_Timer.Enabled = false;
+            // OPC_Timer.Enabled = false; No longer in use
             SystemInSetupMode_OPC();
             OPC_RunModeIntValue = 0;
             ResetWeldCount_Button.Visible = true;
@@ -565,6 +570,7 @@ namespace DMP_Spot_Weld_Application
             SetupMode_Button.BackColor = Color.Yellow;
             RunMode_Button.BackColor = Color.Transparent;
             SetupMode_Button_Clicked = true;
+            // PartComplete_GroupRead.SetEnabled(false);
         }
 
         private void CancelRun_Button_Click(object sender, EventArgs e)
@@ -582,7 +588,8 @@ namespace DMP_Spot_Weld_Application
 
         private void JobEnd_Button_Click(object sender, EventArgs e)
         {
-            OPC_Timer.Enabled = false;
+            // OPC_Timer.Enabled = false; no longer in use
+            PartsComplete_Activate = false;
             OPC_RunModeIntValue = 0;
             SystemInRunMode_OPC();
             StartNewJob_Button.Enabled = true;
@@ -653,99 +660,101 @@ namespace DMP_Spot_Weld_Application
         {
             SpotWeld_ComboBox.Items.Clear();
             SpotWeld_ComboBox.Text = "";
-
-            if (Company_ComboBox.Text == "Paccar")
+                                    
+            if (Company_ComboBox.Text == "CAT")
             {
-                ProgramListUpdate_String = "UPDATE [dbo].[Paccar_Item_Data] SET PartsManufactured=@PartsManufactured,PartsPerMinute=@PartsPerMinute,TotalRuns=@TotalRuns WHERE ItemID=@ItemID AND Sequence=@Sequence";
-                RefreshUpdate_String = "SELECT * FROM [dbo].[Paccar_Item_Data]";
+                ProgramListUpdate_String = "UPDATE [dbo].[CAT_Item_Data] SET PartsManufactured=@PartsManufactured,PartsPerMinute=@PartsPerMinute,TotalRuns=@TotalRuns WHERE ItemID=@ItemID AND Sequence=@Sequence";
+                RefreshUpdate_String = "SELECT * FROM [dbo].[CAT_Item_Data]";
 
-                SpotWeld_ComboBox.Items.AddRange(PaccarSpotWelders);
+                SpotWeld_ComboBox.Items.AddRange(CATSpotWelders);
                 SqlConnection connection = new SqlConnection(SQL_Source);
-                string SW153 = "SELECT * FROM [dbo].[Paccar_Item_Data]";
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(SW153, connection);
+                string CAT = "SELECT * FROM [dbo].[CAT_Item_Data]";
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(CAT, connection);
                 SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
                 DataSet Data = new DataSet();
                 dataAdapter.Fill(Data);
                 UserProgramGridView.DataSource = Data.Tables[0];
 
                 int rows = 0;
-                string SW153Count = "SELECT COUNT(*) FROM [dbo].[Paccar_Item_Data]";
-                SqlConnection count = new SqlConnection(SQL_Source);
-                SqlCommand countRows = new SqlCommand(SW153Count, count);
-                count.Open();
+                string CATCount = "SELECT COUNT(*) FROM [dbo].[CAT_Item_Data]";
+                SqlConnection CATConnect = new SqlConnection(SQL_Source);
+                SqlCommand countRows = new SqlCommand(CATCount, CATConnect);
+                CATConnect.Open();
                 rows = (int)countRows.ExecuteScalar();
-                count.Close();
+                CATConnect.Close();
             }
-            else if(Company_ComboBox.Text == "Navistar")
+            else if (Company_ComboBox.Text == "John Deere")
+            {
+                ProgramListUpdate_String = "UPDATE [dbo].[JohnDeere_Item_Data] SET PartsManufactured=@PartsManufactured,PartsPerMinute=@PartsPerMinute,TotalRuns=@TotalRuns WHERE ItemID=@ItemID AND Sequence=@Sequence";
+                RefreshUpdate_String = "SELECT * FROM [dbo].[JohnDeere_Item_Data]";
+
+                SpotWeld_ComboBox.Items.AddRange(JohnDeereSpotWelders);
+                SqlConnection connection = new SqlConnection(SQL_Source);
+                string JohnDeere = "SELECT * FROM [dbo].[JohnDeere_Item_Data]";
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(JohnDeere, connection);
+                SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
+                DataSet Data = new DataSet();
+                dataAdapter.Fill(Data);
+                UserProgramGridView.DataSource = Data.Tables[0];
+
+                int rows = 0;
+                string JDCount = "SELECT COUNT(*) FROM [dbo].[JohnDeere_Item_Data]";
+                SqlConnection JDConnect = new SqlConnection(SQL_Source);
+                SqlCommand countRows = new SqlCommand(JDCount, JDConnect);
+                JDConnect.Open();
+                rows = (int)countRows.ExecuteScalar();
+                JDConnect.Close();
+            }
+            else if (Company_ComboBox.Text == "Navistar")
             {
                 ProgramListUpdate_String = "UPDATE [dbo].[Navistar_Item_Data] SET PartsManufactured=@PartsManufactured,PartsPerMinute=@PartsPerMinute,TotalRuns=@TotalRuns WHERE ItemID=@ItemID AND Sequence=@Sequence";
                 RefreshUpdate_String = "SELECT * FROM [dbo].[Navistar_Item_Data]";
 
                 SpotWeld_ComboBox.Items.AddRange(NavistarSpotWelders);
                 SqlConnection connection = new SqlConnection(SQL_Source);
-                string SW153 = "SELECT * FROM [dbo].[Navistar_Item_Data]";
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(SW153, connection);
+                string Navistar = "SELECT * FROM [dbo].[Navistar_Item_Data]";
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(Navistar, connection);
                 SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
                 DataSet Data = new DataSet();
                 dataAdapter.Fill(Data);
                 UserProgramGridView.DataSource = Data.Tables[0];
 
                 int rows = 0;
-                string SW153Count = "SELECT COUNT(*) FROM [dbo].[Navistar_Item_Data]";
-                SqlConnection count = new SqlConnection(SQL_Source);
-                SqlCommand countRows = new SqlCommand(SW153Count, count);
-                count.Open();
+                string NavistarCount = "SELECT COUNT(*) FROM [dbo].[Navistar_Item_Data]";
+                SqlConnection NavistarConnect = new SqlConnection(SQL_Source);
+                SqlCommand countRows = new SqlCommand(NavistarCount, NavistarConnect);
+                NavistarConnect.Open();
                 rows = (int)countRows.ExecuteScalar();
-                count.Close();
+                NavistarConnect.Close();
             }
+            else if (Company_ComboBox.Text == "Paccar")
+            {
+                ProgramListUpdate_String = "UPDATE [dbo].[Paccar_Item_Data] SET PartsManufactured=@PartsManufactured,PartsPerMinute=@PartsPerMinute,TotalRuns=@TotalRuns WHERE ItemID=@ItemID AND Sequence=@Sequence";
+                RefreshUpdate_String = "SELECT * FROM [dbo].[Paccar_Item_Data]";
+
+                SpotWeld_ComboBox.Items.AddRange(PaccarSpotWelders);
+                SqlConnection connection = new SqlConnection(SQL_Source);
+                string Paccar = "SELECT * FROM [dbo].[Paccar_Item_Data]";
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(Paccar, connection);
+                SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
+                DataSet Data = new DataSet();
+                dataAdapter.Fill(Data);
+                UserProgramGridView.DataSource = Data.Tables[0];
+
+                int rows = 0;
+                string PaccarCount = "SELECT COUNT(*) FROM [dbo].[Paccar_Item_Data]";
+                SqlConnection PaccarConnect = new SqlConnection(SQL_Source);
+                SqlCommand countRows = new SqlCommand(PaccarCount, PaccarConnect);
+                PaccarConnect.Open();
+                rows = (int)countRows.ExecuteScalar();
+                PaccarConnect.Close();            }
+
         }
 
+        // Not Used
         private void SpotWeld_ComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (SpotWeld_ComboBox.Text == "153R")
-            {
-                // Connect to SQL DataTable and Load
-                //SpotWeldNamePDFPath = "_1176";
-                // Select BarCode Reader on Current Brake Press
-                /*
-                SqlConnection connection = new SqlConnection(SQL_Source);
-                string BP1176 = "SELECT * FROM [dbo].[BP_1176_Schedule]";
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(BP1176, connection);
-                SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
-                DataSet Data = new DataSet();
-                dataAdapter.Fill(Data);
-                ScheduleGridView.DataSource = Data.Tables[0];
-                */
-                //GroupState.Name = "1176";
-                //GroupState.Active = true;
-                //GroupID = (Opc.Da.Subscription)Server.CreateSubscription(GroupState);
-                /*
-                SqlConnection connection = new SqlConnection(SQL_Source);
-                string BP1176 = "SELECT * FROM [dbo].[Paccar_Item_Data]";
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(BP1176, connection);
-                SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
-                DataSet Data = new DataSet();
-                dataAdapter.Fill(Data);
-                UserProgramGridView.DataSource = Data.Tables[0];
-
-                int rows = 0;
-                string BP1176Count = "SELECT COUNT(*) FROM [dbo].[Paccar_Item_Data]";
-                SqlConnection count = new SqlConnection(SQL_Source);
-                SqlCommand countRows = new SqlCommand(BP1176Count, count);
-                count.Open();
-                rows = (int)countRows.ExecuteScalar();
-                count.Close();
-
-                foreach (DataGridViewRow row in UserProgramGridView.Rows)
-                {
-                    if (row.Index < rows)
-                    {
-
-                        ItemID_ComboBox.Items.Add(row.Cells[0].Value.ToString());
-                    }
-                }
-                */
-            }
+            
         }
 
         /*********************************************************************************************************************
@@ -1204,20 +1213,7 @@ namespace DMP_Spot_Weld_Application
                 MessageBox.Show(ex.Message);
             }
         }
-
-        private void PLC_JobIDRead_OPC()
-        {
-            List<Item> OPC_JobID = new List<Item>();
-            Opc.Da.Item[] OPC_JobIDRead = new Opc.Da.Item[1];
-            OPC_JobIDRead[0] = new Opc.Da.Item();
-            OPC_JobIDRead[0].ItemName = SpotWeld_TagID + "Item_Number_Compare_Value";
-            OPC_JobID.Add(OPC_JobIDRead[0]);
-            Part_JobID_GroupRead.AddItems(OPC_JobID.ToArray());
-
-            Opc.IRequest ReadRequest;
-            Part_JobID_GroupRead.Read(Part_JobID_GroupRead.Items, 123, new Opc.Da.ReadCompleteEventHandler(ReadCompleteCallback), out ReadRequest);
-        }
-
+        
         private void OperationSelect_OPC()
         {
             try
@@ -1379,381 +1375,426 @@ namespace DMP_Spot_Weld_Application
             }
             catch (Exception ex)
             {
-                OPC_Timer.Enabled = false;
+                // OPC_Timer.Enabled = false; no longer in use
                 Timer.Enabled = false;
                 SetupMode_Button_Click(null, null);
                 MessageBox.Show("Please Select End Job");
             }
         }
 
+
         void PartCompleted_GroupRead_DataChanged(object subscriptionHandle, object requestHandle, ItemValueResult[] values)
         {
-            // CAT Spot Welders
-            if (System.Environment.MachineName == "123R") // CAT - 123R
+            if(PartsComplete_Activate == true)
             {
-                foreach (ItemValueResult itemValue in values)
+                // CAT Spot Welders
+                if (System.Environment.MachineName == "123R") // CAT - 123R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values)
                     {
-                        case "OHN66OPC.Spot_Weld_123R.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_123R.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_123R.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_123R.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_123R.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_123R.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_123R.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_123R.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_123R.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_123R.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_123R.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_123R.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_123R.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_123R.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            else if (System.Environment.MachineName == "1088") // CAT - 1088
-            {
-                foreach (ItemValueResult itemValue in values)
+                else if (System.Environment.MachineName == "1088") // CAT - 1088
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values)
                     {
-                        case "OHN66OPC.Spot_Weld_1088.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_1088.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_1088.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_1088.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_1088.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_1088.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_1088.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_1088.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_1088.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_1088.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_1088.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_1088.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_1088.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_1088.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            // John Deere Spot Welders
-            else if (System.Environment.MachineName == "108R") // John Deere - 108R
-            {
-                foreach (ItemValueResult itemValue in values)
+                // John Deere Spot Welders
+                else if (System.Environment.MachineName == "108R") // John Deere - 108R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values)
                     {
-                        case "OHN66OPC.Spot_Weld_108R.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_108R.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_108R.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_108R.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_108R.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_108R.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_108R.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_108R.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_108R.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_108R.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_108R.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_108R.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_108R.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_108R.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            else if (System.Environment.MachineName == "150R") // John Deere - 150R
-            {
-                foreach (ItemValueResult itemValue in values)
+                else if (System.Environment.MachineName == "150R") // John Deere - 150R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values)
                     {
-                        case "OHN66OPC.Spot_Weld_150R.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_150R.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_150R.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_150R.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_150R.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_150R.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_150R.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_150R.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_150R.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_150R.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_150R.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_150R.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_150R.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_150R.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            // Navistar Spot Welders
-            else if (System.Environment.MachineName == "OHN7149") // Navistar - 121R
-            {
-                foreach (ItemValueResult itemValue in values)
+                // Navistar Spot Welders
+                else if (System.Environment.MachineName == "OHN7149") // Navistar - 121R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values)
                     {
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            else if (System.Environment.MachineName == "OHN7111") // Navistar - 154R
-            {
-                foreach (ItemValueResult itemValue in values) // 154R
+                else if (System.Environment.MachineName == "OHN7111") // Navistar - 154R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values) // 154R
                     {
-                        case "OHN66OPC.Spot_Weld_154R.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_154R.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_154R.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_154R.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_154R.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_154R.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_154R.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_154R.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_154R.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_154R.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_154R.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_154R.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_154R.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_154R.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            // Paccar Spot Welders
-            else if (System.Environment.MachineName == "OHN7124") // Paccar - 153R
-            {
-                foreach (ItemValueResult itemValue in values) // 153R
+                // Paccar Spot Welders
+                else if (System.Environment.MachineName == "OHN7124") // Paccar - 153R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values) // 153R
                     {
-                        case "OHN66OPC.Spot_Weld_153R.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_153R.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_153R.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_153R.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_153R.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_153R.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_153R.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_153R.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_153R.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_153R.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_153R.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_153R.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_153R.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_153R.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            else if (System.Environment.MachineName == "OHN7123") // Paccar - 155R
-            {
-                foreach (ItemValueResult itemValue in values)
+                else if (System.Environment.MachineName == "OHN7123") // Paccar - 155R
                 {
-                    switch (itemValue.ItemName)
+                    foreach (ItemValueResult itemValue in values)
                     {
-                        case "OHN66OPC.Spot_Weld_155R.Global.JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_155R.Global.JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_155R.Global.PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_155R.Global.PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_155R.Global.PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_155R.Global.PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_155R.Global.HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_155R.Global.HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_155R.Global.SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_155R.Global.SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_155R.Global.Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_155R.Global.Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
 
-                        case "OHN66OPC.Spot_Weld_155R.Global.Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
-                    }
-                } 
-            }            
-            // My Computer For Testing
-            else if (System.Environment.MachineName == "OHN7047NL") // My Computer For Testing
-            {
-                foreach (ItemValueResult itemValue in values)
-                {
-                    switch (itemValue.ItemName)
-                    {
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_JOB_ORDER_COUNTER.ACC":
-                            Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
-
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.ACC":
-                            Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
-                            break;
-
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.PRE":
-                            Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
-                            break;
-
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_HMI_PART_COMPLETE":
-                            HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
-                            break;
-
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_SETUP_MODE_SET":
-                            Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
-                            break;
-
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Fault":
-                            Fault_Value = Convert.ToString(itemValue.Value);
-                            break;
-
-                        case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Item_Number_Compare_Value":
-                            Item_Number_PLC = Convert.ToString(itemValue.Value);
-                            break;
+                            case "OHN66OPC.Spot_Weld_155R.Global.Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
                     }
                 }
-            }
-            PartsFormed_TextBox.Invoke(new EventHandler(delegate { PartsFormed_TextBox.Text = Job_Order_Counter_ACC; }));
-            CurrentWeld_TextBox.Invoke(new EventHandler(delegate { CurrentWeld_TextBox.Text = Part_Complete_Counter_ACC; }));
-            TotalWeldsNeeded_TextBox.Invoke(new EventHandler(delegate { TotalWeldsNeeded_TextBox.Text = Part_Complete_Counter_PRE; }));
-            HMIPartComplete_TextBox.Invoke(new EventHandler(delegate { HMIPartComplete_TextBox.Text = HMI_Part_Complete_VALUE; }));
-            SetupModeSet_TextBox.Invoke(new EventHandler(delegate { SetupModeSet_TextBox.Text = Setup_Mode_Set_VALUE; }));
-            Fault_TextBox.Invoke(new EventHandler(delegate { Fault_TextBox.Text = Fault_Value; }));
-            JobID_TextBox.Invoke(new EventHandler(delegate { JobID_TextBox.Text = Item_Number_PLC; }));
+                // My Computer For Testing
+                else if (System.Environment.MachineName == "OHN7047NL") // My Computer For Testing
+                {
+                    foreach (ItemValueResult itemValue in values)
+                    {
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
-            if (HMIPartComplete_TextBox.Text == "True")
-            {
-                PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.Visible = true; }));
-                PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.BringToFront(); }));
-                //PartCompleted_TextBox.Visible = true;
-                //PartCompleted_TextBox.BringToFront();
-            }
-            else if (HMIPartComplete_TextBox.Text == "False")
-            {
-                PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.Visible = false; }));
-                PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.SendToBack(); }));
-                //PartCompleted_TextBox.Visible = false;
-                //PartCompleted_TextBox.SendToBack();
-            }
-            if (SetupModeSet_TextBox.Text == "True")
-            {
-                SetupMode_Button.Invoke(new EventHandler(delegate { SetupMode_Button.PerformClick(); }));
-                //SetupMode_Button_Click(null, null);
-            }
-            if (Fault_TextBox.Text == "1")
-            {
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
 
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
+                    }
+                }
+                else // Default 
+                {
+                    foreach (ItemValueResult itemValue in values)
+                    {
+                        switch (itemValue.ItemName)
+                        {
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_JOB_ORDER_COUNTER.ACC":
+                                Job_Order_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.ACC":
+                                Part_Complete_Counter_ACC = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_PART_COMPLETE_COUNTER.PRE":
+                                Part_Complete_Counter_PRE = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_HMI_PART_COMPLETE":
+                                HMI_Part_Complete_VALUE = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_SETUP_MODE_SET":
+                                Setup_Mode_Set_VALUE = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Fault":
+                                Fault_Value = Convert.ToString(itemValue.Value);
+                                break;
+
+                            case "OHN66OPC.Spot_Weld_121R.Global.SW121R_Item_Number_Compare_Value":
+                                Item_Number_PLC = Convert.ToString(itemValue.Value);
+                                break;
+                        }
+                    }
+                }
+                PartsFormed_TextBox.Invoke(new EventHandler(delegate { PartsFormed_TextBox.Text = Job_Order_Counter_ACC; }));
+                CurrentWeld_TextBox.Invoke(new EventHandler(delegate { CurrentWeld_TextBox.Text = Part_Complete_Counter_ACC; }));
+                TotalWeldsNeeded_TextBox.Invoke(new EventHandler(delegate { TotalWeldsNeeded_TextBox.Text = Part_Complete_Counter_PRE; }));
+                HMIPartComplete_TextBox.Invoke(new EventHandler(delegate { HMIPartComplete_TextBox.Text = HMI_Part_Complete_VALUE; }));
+                SetupModeSet_TextBox.Invoke(new EventHandler(delegate { SetupModeSet_TextBox.Text = Setup_Mode_Set_VALUE; }));
+                Fault_TextBox.Invoke(new EventHandler(delegate { Fault_TextBox.Text = Fault_Value; }));
+                JobID_TextBox.Invoke(new EventHandler(delegate { JobID_TextBox.Text = Item_Number_PLC; }));
+
+                if (HMIPartComplete_TextBox.Text == "True")
+                {
+                    PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.Visible = true; }));
+                    PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.BringToFront(); }));
+                    //PartCompleted_TextBox.Visible = true;
+                    //PartCompleted_TextBox.BringToFront();
+                }
+                else if (HMIPartComplete_TextBox.Text == "False")
+                {
+                    PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.Visible = false; }));
+                    PartCompleted_TextBox.Invoke(new EventHandler(delegate { PartCompleted_TextBox.SendToBack(); }));
+                    //PartCompleted_TextBox.Visible = false;
+                    //PartCompleted_TextBox.SendToBack();
+                }
+                if (SetupModeSet_TextBox.Text == "True")
+                {
+                    SetupMode_Button.Invoke(new EventHandler(delegate { SetupMode_Button.PerformClick(); }));
+                    //SetupMode_Button_Click(null, null);
+                }
+                if (Fault_TextBox.Text == "1")
+                {
+                    /*
+                    FaultMessage_TextBox.Invoke(new EventHandler(delegate {
+                        FaultMessage_TextBox.Location = new System.Drawing.Point(444, 967);
+                        FaultMessage_TextBox.Size = new System.Drawing.Size(1880, 450); }));
+                        */
+                    UserProgram.Invoke(new EventHandler(delegate { Update_UI_OPC(); }));
+                }
             }
+            
 
         }
 
         private void PartsCompleted_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-
         }
 
         private void ReadCompleteCallback(object clientHandle, Opc.Da.ItemValueResult[] results)
@@ -1767,7 +1808,6 @@ namespace DMP_Spot_Weld_Application
             Fault_TextBox.Invoke(new EventHandler(delegate { Fault_TextBox.Text = (results[5].Value).ToString(); }));
             JobID_TextBox.Invoke(new EventHandler(delegate { JobID_TextBox.Text = (results[6].Value).ToString(); }));
             */
-            JobID_TextBox.Invoke(new EventHandler(delegate { JobID_TextBox.Text = (results[0].Value).ToString(); }));
         }
 
         private void ReadPartNotProgrammedCallback(object clientHandle, Opc.Da.ItemValueResult[] results)
@@ -1819,8 +1859,14 @@ namespace DMP_Spot_Weld_Application
                 }
             }
             */
+            User_Program_Part_Not_Completed NotCompleted = new User_Program_Part_Not_Completed();
+            if (NotCompleted.ShowDialog(this) == DialogResult.Yes)
+            {
+                Fault_Value = "0";
+            }
         }
 
+        /*
         private void SetupModeTimeOut_OPC()
         {
             if (SetupModeSet_TextBox.Text == "True")
@@ -1828,6 +1874,7 @@ namespace DMP_Spot_Weld_Application
                 SetupMode_Button_Click(null, null);
             }
         }
+        */
 
         private void HMIPartComplete_OPC()
         {
@@ -2500,16 +2547,16 @@ namespace DMP_Spot_Weld_Application
 
         /*********************************************************************************************************************
         * Timer Region Start
-        * -- Total: 4
+        * -- Total: 3
         * 
         * - Clock Tick - Interval 500ms
         * - Timer Tick - Interval 5000ms - 5s
-        * - OPCStatus Timer Tick - Interval 500ms
-        * - OPC Timer Tick - Interval 1800000ms - 30min
+        * - OPCStatus Timer Tick - Interval 1800000ms - 30min
         * 
         *********************************************************************************************************************/
         #region
 
+        // Date and Time 
         private void Clock_Tick(object sender, EventArgs e)
         {
             string AMPM = "";
@@ -2577,6 +2624,8 @@ namespace DMP_Spot_Weld_Application
             RunningStatistics();
         }
 
+        // Check the Connection of the OPC Server
+        // Reconnect if Connection has been lost
         private void OPCStatus_Timer_Tick(object sender, EventArgs e)
         {
             if (OPCServer.IsConnected != true)
@@ -2585,22 +2634,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
-        private void OPC_Timer_Tick(object sender, EventArgs e)
-        {
-            //PartsCompletedRunMode_OPC();
-            //if (PartCounterOPC.IsBusy != true)
-            //{
-            //    PartCounterOPC.RunWorkerAsync();
-            //}
-            //PartCounterOPC.RunWorkerAsync();
-
-            Update_UI_OPC();
-            //SetupModeTimeOut_OPC();
-            //HMIPartComplete_OPC();
-
-            //OPCServer.GetStatus();
-
-        }
+ 
 
         /********************************************************************************************************************* 
         * Timer Region End
@@ -2639,7 +2673,7 @@ namespace DMP_Spot_Weld_Application
                 SearchItemIDOperation();
                 if (JobFound == true)
                 {
-                    PLC_JobIDRead_OPC();
+                    //PLC_JobIDRead_OPC();
                     //ShowComponents();
                     UserProgram.Focus();
                     UserProgram.Enabled = false;
@@ -2831,7 +2865,7 @@ namespace DMP_Spot_Weld_Application
         * TextBox Enter Region End
         *********************************************************************************************************************/
         #endregion
-            
+
         /*********************************************************************************************************************
         * 
         * Events Region End
@@ -2860,6 +2894,21 @@ namespace DMP_Spot_Weld_Application
         *********************************************************************************************************************/
         #region
 
+        private void OPC_Timer_Tick(object sender, EventArgs e)
+        {
+            //PartsCompletedRunMode_OPC();
+            //if (PartCounterOPC.IsBusy != true)
+            //{
+            //    PartCounterOPC.RunWorkerAsync();
+            //}
+            //PartCounterOPC.RunWorkerAsync();
+
+            //Update_UI_OPC();
+            //SetupModeTimeOut_OPC();
+            //HMIPartComplete_OPC();
+
+            //OPCServer.GetStatus();
+        }
 
         /*********************************************************************************************************************
         *

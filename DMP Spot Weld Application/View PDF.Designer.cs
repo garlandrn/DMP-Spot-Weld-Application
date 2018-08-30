@@ -31,7 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(View_PDF));
             this.Close_Button = new System.Windows.Forms.Button();
             this.AcroPDF = new AxAcroPDFLib.AxAcroPDF();
-            this.ExcelWebBrowser = new System.Windows.Forms.WebBrowser();
             ((System.ComponentModel.ISupportInitialize)(this.AcroPDF)).BeginInit();
             this.SuspendLayout();
             // 
@@ -55,14 +54,6 @@
             this.AcroPDF.Size = new System.Drawing.Size(1905, 899);
             this.AcroPDF.TabIndex = 2;
             // 
-            // ExcelWebBrowser
-            // 
-            this.ExcelWebBrowser.Location = new System.Drawing.Point(0, 0);
-            this.ExcelWebBrowser.MinimumSize = new System.Drawing.Size(20, 20);
-            this.ExcelWebBrowser.Name = "ExcelWebBrowser";
-            this.ExcelWebBrowser.Size = new System.Drawing.Size(1905, 899);
-            this.ExcelWebBrowser.TabIndex = 3;
-            // 
             // View_PDF
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -70,7 +61,6 @@
             this.ClientSize = new System.Drawing.Size(1904, 1042);
             this.ControlBox = false;
             this.Controls.Add(this.Close_Button);
-            this.Controls.Add(this.ExcelWebBrowser);
             this.Controls.Add(this.AcroPDF);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(1598, 38);
@@ -85,6 +75,5 @@
         #endregion
         private System.Windows.Forms.Button Close_Button;
         protected internal AxAcroPDFLib.AxAcroPDF AcroPDF;
-        public System.Windows.Forms.WebBrowser ExcelWebBrowser;
     }
 }

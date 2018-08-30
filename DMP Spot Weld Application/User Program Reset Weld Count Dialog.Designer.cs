@@ -28,12 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(User_Program_Reset_Weld_Count_Dialog));
             this.Confirm_Button = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.Cancel_Button = new System.Windows.Forms.Button();
-            this.ResetOff_Timer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // Confirm_Button
@@ -70,11 +68,6 @@
             this.Cancel_Button.UseVisualStyleBackColor = true;
             this.Cancel_Button.Click += new System.EventHandler(this.Cancel_Button_Click);
             // 
-            // ResetOff_Timer
-            // 
-            this.ResetOff_Timer.Interval = 1000;
-            this.ResetOff_Timer.Tick += new System.EventHandler(this.ResetOff_Timer_Tick);
-            // 
             // User_Program_Reset_Weld_Count_Dialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -99,6 +92,5 @@
         private System.Windows.Forms.Button Confirm_Button;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button Cancel_Button;
-        private System.Windows.Forms.Timer ResetOff_Timer;
     }
 }

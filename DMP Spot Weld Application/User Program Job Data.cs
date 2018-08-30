@@ -206,6 +206,7 @@ namespace DMP_Spot_Weld_Application
             this.owner.PassReferenceNumber(ReferenceNumber_TextBox.Text);
             User_Program.UserProgram.Enabled = true;
             OPCServer.Disconnect();
+            this.Dispose();
             this.Close();
         }
 
@@ -216,6 +217,7 @@ namespace DMP_Spot_Weld_Application
             User_Program.UserProgram.Enabled = true;
             owner.StartNewJob_Button.Focus();
             OPCServer.Disconnect();
+            this.Dispose();
             this.Close();
         }
 
@@ -255,7 +257,6 @@ namespace DMP_Spot_Weld_Application
                 ScanNewPart_StateWrite.Name = "ScanNewPart_WriteGroup";
                 ScanNewPart_StateWrite.Active = true;
                 ScanNewPart_Write = (Opc.Da.Subscription)OPCServer.CreateSubscription(ScanNewPart_StateWrite);
-
 
                 Hardware_StateWrite = new Opc.Da.SubscriptionState();
                 Hardware_StateWrite.Name = "Hardware_WriteGroup";
@@ -316,15 +317,19 @@ namespace DMP_Spot_Weld_Application
         // Initialize the Correct Components Bit From the PLC
         private void ComponentCheck_OPC()
         {
-            List<Item> OPC_ReadList = new List<Item>();
-            Opc.Da.Item[] OPC_ReadComponent = new Opc.Da.Item[1];
-            OPC_ReadComponent[0] = new Opc.Da.Item();
-            OPC_ReadComponent[0].ItemName = Spotweld_Tag_Name + "CORRECT_COMPONENTS_BIT";
-            OPC_ReadList.Add(OPC_ReadComponent[0]);
-            Component_Read.AddItems(OPC_ReadList.ToArray());
-
-            Opc.IRequest req;
-            Component_Read.Read(Component_Read.Items, 123, new Opc.Da.ReadCompleteEventHandler(ReadCompleteCallback), out req);
+            try
+            {
+                List<Item> OPC_ReadList = new List<Item>();
+                Opc.Da.Item[] OPC_ReadComponent = new Opc.Da.Item[1];
+                OPC_ReadComponent[0] = new Opc.Da.Item();
+                OPC_ReadComponent[0].ItemName = Spotweld_Tag_Name + "CORRECT_COMPONENTS_BIT";
+                OPC_ReadList.Add(OPC_ReadComponent[0]);
+                Component_Read.AddItems(OPC_ReadList.ToArray());
+            }
+            catch (Exception er)
+            {
+                MessageBox.Show(er.ToString());
+            }            
         }
 
         // When the Value of Correct Component Bit Changes Enable the OK Button
@@ -425,23 +430,23 @@ namespace DMP_Spot_Weld_Application
                     }
                 }
             }
-            CorrectComponents_TextBox.Invoke(new EventHandler(delegate { CorrectComponents_TextBox.Text = Correct_Component_Bit; }));
+            Invoke(new EventHandler(delegate { CorrectComponents_Check(); }));
+        }
+
+        private void CorrectComponents_Check()
+        {
+            CorrectComponents_TextBox.Text = Correct_Component_Bit;
             if (CorrectComponents_TextBox.Text == "True")
             {
-                Run_Button.Invoke(new EventHandler(delegate { Run_Button.Show(); }));
-                Run_Button.Invoke(new EventHandler(delegate { Run_Button.Focus(); }));
+                Run_Button.Show();
+                Run_Button.Focus();
             }
             else if (CorrectComponents_TextBox.Text == "False")
             {
-                Run_Button.Invoke(new EventHandler(delegate { Run_Button.Hide(); }));
+                Run_Button.Hide();
             }
         }
-
-        private void ReadCompleteCallback(object clientHandle, Opc.Da.ItemValueResult[] results)
-        {
-            CorrectComponents_TextBox.Invoke(new EventHandler(delegate { CorrectComponents_TextBox.Text = (results[0].Value).ToString(); }));
-        }
-
+        
         private void WriteCompleteCallback(object clientHandle, Opc.IdentifiedResult[] results)
         {
             foreach (Opc.IdentifiedResult writeResult in results)

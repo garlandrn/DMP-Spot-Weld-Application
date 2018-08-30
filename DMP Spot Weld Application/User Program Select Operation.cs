@@ -9,11 +9,19 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Opc.Da;
 
+/* 
+ * Program: DMP Spot Weld Application
+ * Form: User Program Select Operation
+ * Created By: Ryan Garland
+ * Last Updated on 8/30/18 
+ */
+
 namespace DMP_Spot_Weld_Application
 {
     public partial class User_Program_Select_Operation : Form
     {
         User_Program Owner = null;
+
         public User_Program_Select_Operation(User_Program Owner)
         {
             InitializeComponent();
@@ -26,35 +34,45 @@ namespace DMP_Spot_Weld_Application
 
         public int SelectedOperation;
 
-        private Opc.URL OPCUrl;
+        // Connect to OPC Server on Form Load
         private Opc.Da.Server OPCServer;
         private OpcCom.Factory OPCFactory = new OpcCom.Factory();
+
+        // OPC Write
         private Opc.Da.Subscription OperationSelection_Write;
         private Opc.Da.SubscriptionState OperationSelection_StateWrite;
+
+        // OPC Read 
         private Opc.Da.Subscription OperationSelection_Read;
         private Opc.Da.SubscriptionState OperationSelection_StateRead;
-        private static string Spotweld_Tag_Name = "";
+
+        private static string SpotWeld_Tag_Name = "";
 
         private void User_Program_Select_Operation_Load(object sender, EventArgs e)
         {
             SpotWeldID();
+
+            // Kepware OPC Connection
             OPCServer = new Opc.Da.Server(OPCFactory, null);
             OPCServer.Url = new Opc.URL("opcda://OHN66OPC/Kepware.KEPServerEX.V6");
             OPCServer.Connect();
 
-            OperationSelection_StateRead = new Opc.Da.SubscriptionState();
-            OperationSelection_StateRead.Name = "153R_Spotweld";
-            OperationSelection_StateRead.UpdateRate = 200;
-            OperationSelection_StateRead.Active = true;
-
-            OperationSelection_Read = (Opc.Da.Subscription)OPCServer.CreateSubscription(OperationSelection_StateRead);
-
+            // OPC Write
             OperationSelection_StateWrite = new Opc.Da.SubscriptionState();
             OperationSelection_StateWrite.Name = "PB_OperationSelect_WriteGroup";
             OperationSelection_StateWrite.Active = false;
             OperationSelection_Write = (Opc.Da.Subscription)OPCServer.CreateSubscription(OperationSelection_StateWrite);
+            
+            // OPC Read
+            OperationSelection_StateRead = new Opc.Da.SubscriptionState();
+            OperationSelection_StateRead.Name = "153R_Spotweld";
+            OperationSelection_StateRead.UpdateRate = 200;
+            OperationSelection_StateRead.Active = true;
+            OperationSelection_Read = (Opc.Da.Subscription)OPCServer.CreateSubscription(OperationSelection_StateRead);
         }
 
+        // Select Operation 1
+        // Send Selected Operation to User Program
         private void Operation_1_Button_Click(object sender, EventArgs e)
         {
             SelectedOperation = 1;
@@ -91,80 +109,84 @@ namespace DMP_Spot_Weld_Application
             this.Close();
         }
 
+        // Set SpotWeld_Tag_Name
         private void SpotWeldID()
         {
             string SpotWeldComputerID = System.Environment.MachineName;
 
-            // CAT Spot Weld
+            // CAT Spot Welders
             if (SpotWeldComputerID == "123R") // CAT - 123R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_123R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_123R.Global.";
             }
-            if (SpotWeldComputerID == "1088") // CAT - 1088
+            else if (SpotWeldComputerID == "1088") // CAT - 1088
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_1088.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_1088.Global.";
             }
-            // John Deere Spot Weld
-            if (SpotWeldComputerID == "108R") // John Deere - 108R
+            // John Deere Spot Welders
+            else if (SpotWeldComputerID == "108R") // John Deere - 108R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_108R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_108R.Global.";
             }
-            if (SpotWeldComputerID == "150R") // John Deere - 150R
+            else if (SpotWeldComputerID == "150R") // John Deere - 150R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_150R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_150R.Global.";
             }
-            // Navistar
-            if (SpotWeldComputerID == "104R") // Navistar - 104R
+            // Navistar Spot Welders
+            else if (SpotWeldComputerID == "104R") // Navistar - 104R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_104R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_104R.Global.";
             }
-            if (SpotWeldComputerID == "OHN7149") // Navistar - 121R
+            else if (SpotWeldComputerID == "OHN7149") // Navistar - 121R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
             }
-            if (SpotWeldComputerID == "OHN7111") // Navistar - 154R
+            else if (SpotWeldComputerID == "OHN7111") // Navistar - 154R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_154R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_154R.Global.";
             }
-            // Paccar
-            if (SpotWeldComputerID == "OHN7124") // Paccar - 153R
+            // Paccar Spot Welders
+            else if (SpotWeldComputerID == "OHN7124") // Paccar - 153R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_153R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_153R.Global.";
             }
-            if (SpotWeldComputerID == "OHN7123") // Paccar - 155R
+            else if (SpotWeldComputerID == "OHN7123") // Paccar - 155R
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_155R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_155R.Global.";
             }
-            else if (SpotWeldComputerID == "OHN7047NL") //  My Laptop
+            // My Computer 
+            else if (SpotWeldComputerID == "OHN7047NL") //  My Computer
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_154R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
             }
-            else if (SpotWeldComputerID == "OHN7017") //  bp 1107
+            // Default Computer
+            else                                       // Default Computer
             {
-                Spotweld_Tag_Name = "OHN66OPC.Spot_Weld_155R.Global.";
+                SpotWeld_Tag_Name = "OHN66OPC.Spot_Weld_121R.Global.SW121R_";
             }
         }
 
+        // Write the Selected Operation Value to the PLC
         private void OperationWriteOPC()
         {
             Opc.Da.Item[] OPC_ItemID = new Opc.Da.Item[8];
             OPC_ItemID[0] = new Opc.Da.Item();
-            OPC_ItemID[0].ItemName = Spotweld_Tag_Name + "HMI_Operation_One_PB";
+            OPC_ItemID[0].ItemName = SpotWeld_Tag_Name + "HMI_Operation_One_PB";
             OPC_ItemID[1] = new Opc.Da.Item();
-            OPC_ItemID[1].ItemName = Spotweld_Tag_Name + "HMI_Operation_Two_PB";
+            OPC_ItemID[1].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Two_PB";
             OPC_ItemID[2] = new Opc.Da.Item();
-            OPC_ItemID[2].ItemName = Spotweld_Tag_Name + "HMI_Operation_Three_PB";
+            OPC_ItemID[2].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Three_PB";
             OPC_ItemID[3] = new Opc.Da.Item();
-            OPC_ItemID[3].ItemName = Spotweld_Tag_Name + "HMI_Operation_Four_PB";
+            OPC_ItemID[3].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Four_PB";
 
             OPC_ItemID[4] = new Opc.Da.Item();
-            OPC_ItemID[4].ItemName = Spotweld_Tag_Name + "HMI_Operation_One_Selected";
+            OPC_ItemID[4].ItemName = SpotWeld_Tag_Name + "HMI_Operation_One_Selected";
             OPC_ItemID[5] = new Opc.Da.Item();
-            OPC_ItemID[5].ItemName = Spotweld_Tag_Name + "HMI_Operation_Two_Selected";
+            OPC_ItemID[5].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Two_Selected";
             OPC_ItemID[6] = new Opc.Da.Item();
-            OPC_ItemID[6].ItemName = Spotweld_Tag_Name + "HMI_Operation_Three_Selected";
+            OPC_ItemID[6].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Three_Selected";
             OPC_ItemID[7] = new Opc.Da.Item();
-            OPC_ItemID[7].ItemName = Spotweld_Tag_Name + "HMI_Operation_Four_Selected";
+            OPC_ItemID[7].ItemName = SpotWeld_Tag_Name + "HMI_Operation_Four_Selected";
             OPC_ItemID = OperationSelection_Write.AddItems(OPC_ItemID);
 
             Opc.Da.ItemValue[] ItemID_OPCValue = new Opc.Da.ItemValue[8];
@@ -177,6 +199,7 @@ namespace DMP_Spot_Weld_Application
             ItemID_OPCValue[6] = new Opc.Da.ItemValue();
             ItemID_OPCValue[7] = new Opc.Da.ItemValue();
 
+            // switch the values written based on which operation was selected
             switch (SelectedOperation)
             {
                 case 1: // Operation #1
@@ -259,7 +282,6 @@ namespace DMP_Spot_Weld_Application
                     ItemID_OPCValue[7].Value = 1;
                     break;
             }
-
             Opc.IRequest OPCRequest;
             OperationSelection_Write.Write(ItemID_OPCValue, 123, new Opc.Da.WriteCompleteEventHandler(WriteCompleteCallback), out OPCRequest);
         }
@@ -272,6 +294,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
+        // OPC Server Disconnects When the Form is Closing
         private void User_Program_Select_Operation_FormClosing(object sender, FormClosingEventArgs e)
         {
             OPCServer.Disconnect();

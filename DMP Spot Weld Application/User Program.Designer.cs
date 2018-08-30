@@ -112,7 +112,6 @@
             this.OperationDataGridView = new System.Windows.Forms.DataGridView();
             this.SpotWeld_TextBox = new System.Windows.Forms.TextBox();
             this.Company_TextBox = new System.Windows.Forms.TextBox();
-            this.OPC_Timer = new System.Windows.Forms.Timer(this.components);
             this.PartCompleted_TextBox = new System.Windows.Forms.TextBox();
             this.HMIPartComplete_TextBox = new System.Windows.Forms.TextBox();
             this.PartNotProgrammed_TextBox = new System.Windows.Forms.TextBox();
@@ -129,6 +128,7 @@
             this.label14 = new System.Windows.Forms.Label();
             this.Fault_TextBox = new System.Windows.Forms.TextBox();
             this.NotApplicableGridView = new System.Windows.Forms.DataGridView();
+            this.OPC_Timer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.UserProgramGridView)).BeginInit();
             this.ItemDataGroupBox.SuspendLayout();
             this.JobData_GroupBox.SuspendLayout();
@@ -1120,11 +1120,6 @@
             this.Company_TextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.Company_TextBox.Enter += new System.EventHandler(this.Company_TextBox_Enter);
             // 
-            // OPC_Timer
-            // 
-            this.OPC_Timer.Interval = 500;
-            this.OPC_Timer.Tick += new System.EventHandler(this.OPC_Timer_Tick);
-            // 
             // PartCompleted_TextBox
             // 
             this.PartCompleted_TextBox.BackColor = System.Drawing.Color.Lime;
@@ -1283,6 +1278,11 @@
             this.NotApplicableGridView.Size = new System.Drawing.Size(70, 63);
             this.NotApplicableGridView.TabIndex = 229;
             this.NotApplicableGridView.Visible = false;
+            // 
+            // OPC_Timer
+            // 
+            this.OPC_Timer.Interval = 500;
+            this.OPC_Timer.Tick += new System.EventHandler(this.OPC_Timer_Tick);
             // 
             // User_Program
             // 
@@ -1448,9 +1448,9 @@
         public System.Windows.Forms.TextBox PartsFormed_TextBox;
         private System.Windows.Forms.Button SytelineScanOut_Button;
         private System.Windows.Forms.Label label14;
-        public System.Windows.Forms.Timer OPC_Timer;
         public System.Windows.Forms.TextBox Fault_TextBox;
         public System.Windows.Forms.TextBox ItemID_TextBox;
         public System.Windows.Forms.DataGridView NotApplicableGridView;
+        public System.Windows.Forms.Timer OPC_Timer;
     }
 }
