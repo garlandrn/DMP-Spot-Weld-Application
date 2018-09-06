@@ -17,18 +17,32 @@ using Excel = Microsoft.Office.Interop.Excel;
 using System.Reflection;
 using System.Windows.Forms.DataVisualization.Charting;
 
+/*
+ * 
+ * Program: DMP Spot Weld Application
+ * Form: Report View
+ * Created By: Ryan Garland
+ * Last Updated on 9/4/18
+ * 
+ */
+
 namespace DMP_Spot_Weld_Application
 {
     public partial class Report_View : Form
     {
+        // Background Workers
         BackgroundWorker PartImage;
         BackgroundWorker CreateExcel;
         public Report_View()
         {
             InitializeComponent();
+            
+            // Find The Part Image on the Network and Display it in the Form
             PartImage = new BackgroundWorker();
             PartImage.DoWork += new DoWorkEventHandler(FindItemImage);
             PartImage.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PartImage_RunWorkerCompleted);
+
+            // Create a Report in an Excel File
             CreateExcel = new BackgroundWorker();
             CreateExcel.DoWork += new DoWorkEventHandler(CreateExcelFile);
             CreateExcel.RunWorkerCompleted += new RunWorkerCompletedEventHandler(CreateExcel_RunWorkerComplete);
@@ -47,10 +61,11 @@ namespace DMP_Spot_Weld_Application
         * 
         ********************************************************************************************************************/
 
+        // SQL Data
+        string SQL_Source = @"Data Source=OHN7009,49172;Initial Catalog=Spot_Weld_Data;Integrated Security=True;Connect Timeout=15;";
         private string LoginForm = "Report Viewer";
         private string LoginTime = "";
-        private string[] SpotWeldID = { "153R", "155R" };
-        string SQL_Source = @"Data Source=OHN7009,49172;Initial Catalog=Spot_Weld_Data;Integrated Security=True;Connect Timeout=15;";
+
         //string SQL_Source = @"Data Source=OHN7009,49172;Initial Catalog=Brake_Press_Data;Integrated Security=True;Connect Timeout=15;";
 
         // Clock_Tick();
@@ -94,6 +109,13 @@ namespace DMP_Spot_Weld_Application
         private static int[] partCount;
 
 
+        private string[] SpotWeldID = { "153R", "155R" };
+        private string[] CATSpotWelders = { "123R", "1088" };
+        private string[] JohnDeereSpotWelders = { "108R", "150R" };
+        private string[] NavistarSpotWelders = { "104R", "121R", "154R" };
+        private string[] PaccarSpotWelders = { "153R", "155R" };
+
+
         /********************************************************************************************************************
         * 
         * ReportViewer Start
@@ -102,6 +124,7 @@ namespace DMP_Spot_Weld_Application
 
         private void Report_View_Load(object sender, EventArgs e)
         {
+            // Write a login Report to SQL Server
             SqlConnection ReportLogin = new SqlConnection(SQL_Source);
             SqlCommand Login = new SqlCommand();
             Login.CommandType = System.Data.CommandType.Text;
@@ -117,39 +140,26 @@ namespace DMP_Spot_Weld_Application
 
             Clock.Enabled = true;
             LoginTime = Clock_TextBox.Text;
+
+            // Connect to SQL Server and Get Employee information
             SqlConnection connection = new SqlConnection(SQL_Source);
-            string BP1176 = "SELECT * FROM [dbo].[Employee]";
-            SqlDataAdapter dataAdapter = new SqlDataAdapter(BP1176, connection);
+            string EmployeeData = "SELECT * FROM [dbo].[Employee]";
+            SqlDataAdapter dataAdapter = new SqlDataAdapter(EmployeeData, connection);
             SqlCommandBuilder commandBuilder = new SqlCommandBuilder(dataAdapter);
             DataSet Data = new DataSet();
             dataAdapter.Fill(Data);
             LoginGridView.DataSource = Data.Tables[0];
             for(int i = 0 ;i < Data.Tables[0].Rows.Count; i++)
             {
+                // Add Employee ID to ComboBox
                 DMPID_ComboBox.Items.Add(Data.Tables[0].Rows[i][0]);
             }
 
-            /*
-            int rows = 0;
-            string BP1176Count = "SELECT COUNT(*) FROM [dbo].[Employee]";
-            SqlConnection count = new SqlConnection(SQL_Source);
-            SqlCommand countRows = new SqlCommand(BP1176Count, count);
-            count.Open();
-            rows = (int)countRows.ExecuteScalar();
-            count.Close();
-
-            foreach (DataGridViewRow row in LoginGridView.Rows)
-            {
-                if (row.Index < rows)
-                {
-
-                    DMPID_ComboBox.Items.Add(row.Cells[0].Value.ToString());
-                }
-            }
-            */
-            Spotweld_ComboBox.Items.AddRange(SpotWeldID);
-
-            chart1.Size = new System.Drawing.Size(1050, 575);
+            // Add Spot Welders to the Spotweld ComboBox for searching
+            Spotweld_ComboBox.Items.AddRange(CATSpotWelders);
+            Spotweld_ComboBox.Items.AddRange(JohnDeereSpotWelders);
+            Spotweld_ComboBox.Items.AddRange(NavistarSpotWelders);
+            Spotweld_ComboBox.Items.AddRange(PaccarSpotWelders);            
         }
 
         /********************************************************************************************************************
@@ -166,11 +176,14 @@ namespace DMP_Spot_Weld_Application
         ********************************************************************************************************************/
         #region
 
+            // Call the Clear Method
         private void Clear_Button_Click(object sender, EventArgs e)
         {
             Clear();
         }
 
+        // Creates a PDF File From the Search Commands Specified
+        // if no Search Commands have been Specified we remind the user to do so
         private void Create_Button_Click(object sender, EventArgs e)
         {
             if (SearchCommand == null)
@@ -183,11 +196,13 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
+        // Call the CommandCreator Method
         private void Search_Button_Click(object sender, EventArgs e)
         {
             CommandCreator();
         }
 
+        // Create an Excel File from the Data that the Search Commands Specified
         private void Excel_Button_Click(object sender, EventArgs e)
         {
             if (SearchCommand == null)
@@ -351,6 +366,7 @@ namespace DMP_Spot_Weld_Application
         **********************************************************************************************************************/
         #region
 
+        // Clear Method
         private void Clear()
         {
             Spotweld_TextBox.Clear();
@@ -369,6 +385,9 @@ namespace DMP_Spot_Weld_Application
             SearchDMPID_TextBox.Clear();
         }
 
+        // the SQL Command is determined by which search variables are entered or selected
+        // we join the OperationOEE and ItemOperationData tables 
+        // as long as data is entered we then call CreateReport method. This takes the SearchCommand and loads the returned data to the datatable
         private void CommandCreator()
         {
             // #1
@@ -607,6 +626,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
+        // Convert the planned time for job run
         private void ConvertPlannedTime()
         {
             PlannedOperationConvert = double.Parse(PlannedOperationTime);
@@ -740,6 +760,7 @@ namespace DMP_Spot_Weld_Application
             PlannedTimeResults_TextBox.Text = PlannedTime;
         }
 
+        // Convert the actual time for job run
         private void ConvertActualTime()
         {
             ActualOperationConvert = double.Parse(ActualOperationTime);
@@ -873,6 +894,7 @@ namespace DMP_Spot_Weld_Application
             OperationTimeResults_TextBox.Text = ActualTime;
         }
 
+        // Return the Data that the SearchCommand finds
         private void CreateReport()
         {
             try
@@ -905,7 +927,6 @@ namespace DMP_Spot_Weld_Application
 
         private void PDFFileCreate()
         {
-            //chart1.Size = new System.Drawing.Size(1100, 775);
             // New PDF Document
             PdfDocument BrakePressReport = new PdfDocument();
             PdfPage ReportPage = BrakePressReport.AddPage();
@@ -913,14 +934,6 @@ namespace DMP_Spot_Weld_Application
             ReportPage.Orientation = PdfSharp.PageOrientation.Landscape;
             ReportPage.Rotate = 0;
             XGraphics ReportGraph = XGraphics.FromPdfPage(ReportPage);
-
-            /*
-            // Fonts
-            XFont ReportDataHeader = new XFont("Verdana", 12, XFontStyle.Bold);
-            XFont ColumnHeader = new XFont("Verdana", 10, XFontStyle.Bold | XFontStyle.Underline);
-            XFont RowFont = new XFont("Verdana", 8, XFontStyle.Regular);
-            XFont PageFooterFont = new XFont("Verdana", 7, XFontStyle.Regular);
-            */
 
             // Fonts
             XFont ReportDataHeader = new XFont("Verdana", 12, XFontStyle.Bold);
@@ -938,49 +951,26 @@ namespace DMP_Spot_Weld_Application
             ReportName = ReportName.Replace(":", "_");
             string ReportFooter = " | Report Created On: " + DateTime.Now.ToShortDateString() + " | Created By: " + User_TextBox.Text;
 
-            /*
-            // PDF Header First Page Only Original
+            // Set the Image and General Report Information
             ReportGraph.DrawImage(XImage.FromFile(@"\\OHN66FS01\BPprogs\Brake Press Vision\Applications\DMPLogo700.jpg"), 35, 5);
             ReportGraph.DrawString(ReportItemID, ReportDataHeader, XBrushes.Black, new XRect(400, 15, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString(ReportSpotWelder, ReportDataHeader, XBrushes.Black, new XRect(400, 33, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString(ReportEmployee, ReportDataHeader, XBrushes.Black, new XRect(400, 51, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString(ReportDate, ReportDataHeader, XBrushes.Black, new XRect(400, 69, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             PointY = PointY + 100;
-            */
-            // New Copy
-            ReportGraph.DrawImage(XImage.FromFile(@"\\OHN66FS01\BPprogs\Brake Press Vision\Applications\DMPLogo700.jpg"), 35, 5);
-            ReportGraph.DrawString(ReportItemID, ReportDataHeader, XBrushes.Black, new XRect(400, 15, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString(ReportSpotWelder, ReportDataHeader, XBrushes.Black, new XRect(400, 33, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString(ReportEmployee, ReportDataHeader, XBrushes.Black, new XRect(400, 51, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString(ReportDate, ReportDataHeader, XBrushes.Black, new XRect(400, 69, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            PointY = PointY + 100;
-
-            /*
-            // Column Headers Original
-            ReportGraph.DrawString("Item ID", ColumnHeader, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(80, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(170, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(240, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(310, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(380, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Spotwelder", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(550, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Employee", ColumnHeader, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("DMP ID", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            //ReportGraph.DrawString("Reference Number", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            */
+            
+            // Set the Headers for each page
             ReportGraph.DrawString("Item ID", ColumnHeader, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(60, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(121, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(165, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+            ReportGraph.DrawString("Run Time", ColumnHeader, XBrushes.Black, new XRect(165, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(224, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(269, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("OEE", ColumnHeader, XBrushes.Black, new XRect(325, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("Spotwelder", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(550, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+            ReportGraph.DrawString("Parts Manufactured", ColumnHeader, XBrushes.Black, new XRect(330, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+            ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+            ReportGraph.DrawString("Spot Welder", ColumnHeader, XBrushes.Black, new XRect(500, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString("Employee", ColumnHeader, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
             ReportGraph.DrawString("DMP ID", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-            //ReportGraph.DrawString("Reference Number", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
 
 
             // Report Footer 
@@ -1003,42 +993,30 @@ namespace DMP_Spot_Weld_Application
                     string RunDateResults = PDFData.Tables[0].Rows[i].ItemArray[2].ToString();
                     string OperationTimeResults = PDFData.Tables[0].Rows[i].ItemArray[3].ToString();
                     string PlannedTimeResults = PDFData.Tables[0].Rows[i].ItemArray[4].ToString();
-                    string EfficiencyResults = PDFData.Tables[0].Rows[i].ItemArray[5].ToString();
-                    string OEEResults = PDFData.Tables[0].Rows[i].ItemArray[6].ToString();
-                    string SpotweldResults = PDFData.Tables[0].Rows[i].ItemArray[7].ToString();
-                    string PartsManufacturedResults = PDFData.Tables[0].Rows[i].ItemArray[8].ToString();
-                    string PPMResults = PDFData.Tables[0].Rows[i].ItemArray[9].ToString();
+                    string PartsManufacturedResults = PDFData.Tables[0].Rows[i].ItemArray[5].ToString();
+                    string PPMResults = PDFData.Tables[0].Rows[i].ItemArray[6].ToString();
+                    string EfficiencyResults = PDFData.Tables[0].Rows[i].ItemArray[7].ToString();
+                    string OEEResults = PDFData.Tables[0].Rows[i].ItemArray[8].ToString();
+                    string SpotweldResults = PDFData.Tables[0].Rows[i].ItemArray[9].ToString();
                     string EmployeeResults = PDFData.Tables[0].Rows[i].ItemArray[10].ToString();
                     string DMPIDResults = PDFData.Tables[0].Rows[i].ItemArray[11].ToString();
                     string JobReferenceNumber = PDFData.Tables[0].Rows[i].ItemArray[12].ToString();
 
                     RunDateResults = RunDateResults.Replace("12:00:00 AM", "");
-
-                    /*
-                    // Report Row Data Original
-                    ReportGraph.DrawString(ItemIDResults, RowFont, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(OperationIDResults, RowFont, XBrushes.Black, new XRect(97, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(RunDateResults, RowFont, XBrushes.Black, new XRect(163, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(OperationTimeResults, RowFont, XBrushes.Black, new XRect(248, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(PlannedTimeResults, RowFont, XBrushes.Black, new XRect(315, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(EfficiencyResults, RowFont, XBrushes.Black, new XRect(395, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(SpotweldResults, RowFont, XBrushes.Black, new XRect(470, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(PPMResults, RowFont, XBrushes.Black, new XRect(554, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(EmployeeResults, RowFont, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(DMPIDResults, RowFont, XBrushes.Black, new XRect(705, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    PointY = PointY + 20;
-                    CurrentRow = CurrentRow + 1;
-                    */
-                    // New Copy
+                    
+                    // Report Row Data 
                     ReportGraph.DrawString(ItemIDResults, RowFont, XBrushes.Black, new XRect(12, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(OperationIDResults, RowFont, XBrushes.Black, new XRect(72, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                    ReportGraph.DrawString(OperationIDResults, RowFont, XBrushes.Black, new XRect(62, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(RunDateResults, RowFont, XBrushes.Black, new XRect(117, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(OperationTimeResults, RowFont, XBrushes.Black, new XRect(174, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(PlannedTimeResults, RowFont, XBrushes.Black, new XRect(229, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(EfficiencyResults, RowFont, XBrushes.Black, new XRect(282, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(OEEResults, RowFont, XBrushes.Black, new XRect(335, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(SpotweldResults, RowFont, XBrushes.Black, new XRect(470, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                    ReportGraph.DrawString(PPMResults, RowFont, XBrushes.Black, new XRect(554, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+
+                    ReportGraph.DrawString(PartsManufacturedResults, RowFont, XBrushes.Black, new XRect(370, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                    ReportGraph.DrawString(PPMResults, RowFont, XBrushes.Black, new XRect(452, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+
+                    ReportGraph.DrawString(SpotweldResults, RowFont, XBrushes.Black, new XRect(520, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(EmployeeResults, RowFont, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     ReportGraph.DrawString(DMPIDResults, RowFont, XBrushes.Black, new XRect(705, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                     PointY = PointY + 20;
@@ -1055,32 +1033,16 @@ namespace DMP_Spot_Weld_Application
                         ReportPage.Orientation = PdfSharp.PageOrientation.Landscape;
                         ReportPage.Rotate = 0;
                         PointY = PointY + 50;
-
-                        /*
-                        // Column Headers For Second Page Original
+                                                
                         ReportGraph.DrawString("Item ID", ColumnHeader, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(80, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(170, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(240, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(310, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(380, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Spotweld", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(550, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Employee", ColumnHeader, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("DMP ID", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        PageNumber = "Page: " + BrakePressReport.PageCount + ReportFooter;
-                        ReportGraph.DrawString(PageNumber, PageFooterFont, XBrushes.Black, new XRect(5, 585, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft); PointY = PointY + 25;
-                        CurrentRow = 0;
-                        */
-
-                        ReportGraph.DrawString("Item ID", ColumnHeader, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(80, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(173, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(240, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(310, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(380, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Spotweld", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(550, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(60, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(121, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Run Time", ColumnHeader, XBrushes.Black, new XRect(165, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(224, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(269, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Parts Manufactured", ColumnHeader, XBrushes.Black, new XRect(330, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Spot Welder", ColumnHeader, XBrushes.Black, new XRect(500, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                         ReportGraph.DrawString("Employee", ColumnHeader, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                         ReportGraph.DrawString("DMP ID", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                         PageNumber = "Page: " + BrakePressReport.PageCount + ReportFooter;
@@ -1097,32 +1059,16 @@ namespace DMP_Spot_Weld_Application
                         ReportPage.Orientation = PdfSharp.PageOrientation.Landscape;
                         ReportPage.Rotate = 0;
                         PointY = PointY + 50;
-
-                        /*
-                        // Column Headers For Any Page After Two Original
+                        
                         ReportGraph.DrawString("Item ID", ColumnHeader, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(80, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(170, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(240, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(310, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(380, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Spotweld", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(550, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Employee", ColumnHeader, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("DMP ID", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        PageNumber = "Page: " + BrakePressReport.PageCount + ReportFooter;
-                        ReportGraph.DrawString(PageNumber, PageFooterFont, XBrushes.Black, new XRect(5, 585, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft); PointY = PointY + 25;
-                        CurrentRow = 0;
-                        */
-
-                        ReportGraph.DrawString("Item ID", ColumnHeader, XBrushes.Black, new XRect(10, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(80, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(170, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(240, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(310, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(380, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("Spotweld", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
-                        ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(550, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Operation", ColumnHeader, XBrushes.Black, new XRect(60, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Date", ColumnHeader, XBrushes.Black, new XRect(121, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Run Time", ColumnHeader, XBrushes.Black, new XRect(165, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Planned", ColumnHeader, XBrushes.Black, new XRect(224, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Efficiency", ColumnHeader, XBrushes.Black, new XRect(269, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Parts Manufactured", ColumnHeader, XBrushes.Black, new XRect(330, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("PPM", ColumnHeader, XBrushes.Black, new XRect(450, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
+                        ReportGraph.DrawString("Spot Welder", ColumnHeader, XBrushes.Black, new XRect(500, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                         ReportGraph.DrawString("Employee", ColumnHeader, XBrushes.Black, new XRect(600, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                         ReportGraph.DrawString("DMP ID", ColumnHeader, XBrushes.Black, new XRect(700, PointY, ReportPage.Width.Point, ReportPage.Height.Point), XStringFormats.TopLeft);
                         PageNumber = "Page: " + BrakePressReport.PageCount + ReportFooter;
@@ -1144,7 +1090,6 @@ namespace DMP_Spot_Weld_Application
                 foreach (DataGridViewRow r in ReportGridView.Rows)
                 {
                     chart1.Series["Series1"].Points.AddXY(r.Cells[0].Value.ToString(), r.Cells[5].Value.ToString());
-                    //chart1.Series["Series1"].Points.Add(Convert.ToDouble(r.Cells[5].Value));
                 }
                 chart1.SaveImage(@"C:\Users\rgarland\Desktop\"+ ReportName+".jpg", ChartImageFormat.Jpeg);
                 XImage img = XImage.FromFile(@"C:\Users\rgarland\Desktop\" + ReportName + ".jpg");
@@ -1246,7 +1191,7 @@ namespace DMP_Spot_Weld_Application
             }
             chart1.SaveImage(@"C:\Users\rgarland\Desktop\" + ReportName + ".jpg", ChartImageFormat.Jpeg);
             picture = (picture + 6) * 15; 
-            ReportWS.Shapes.AddPicture(@"C:\Users\rgarland\Desktop\" + ReportName + ".jpg", Microsoft.Office.Core.MsoTriState.msoFalse, Microsoft.Office.Core.MsoTriState.msoCTrue, 0, picture, 650, 350);
+            //ReportWS.Shapes.AddPicture(@"C:\Users\rgarland\Desktop\" + ReportName + ".jpg", Microsoft.Office.Core.MsoTriState.msoFalse, Microsoft.Office.Core.MsoTriState.msoCTrue, 0, picture, 650, 350);
             ReportRange = ReportWS.get_Range("A6", "L6");
                 ReportRange.EntireColumn.AutoFit();
                 //string ReportPDFName = "Spotweld_Report_" + ReportName + ".xls";

@@ -13,25 +13,11 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 
 /*
+ * 
  * Program: DMP Spot Weld Application
  * Form: JobList
  * Created By: Ryan Garland
- * Last Updated on 1/22/18
- * 
- * Form Sections
- *  - User Interface
- *  --- Buttons
- *  --- ComboBox
- *  --- CheckBox
- *  --- GridView
- *  --- PictureBox
- *  
- *  - SQL DataBase Methods
- *  - Methods
- *  
- * - Clock 
- * 
- * 
+ * Last Updated on 9/4/18
  * 
  */
 
@@ -135,7 +121,6 @@ namespace DMP_Spot_Weld_Application
 
         List<string> ComponentList = new List<string>();
         private static bool Update = false;
-
 
         //
 

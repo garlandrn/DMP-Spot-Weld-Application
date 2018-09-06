@@ -58,7 +58,7 @@
             this.LiveRunTime_TextBox = new System.Windows.Forms.TextBox();
             this.RunMode_Button = new System.Windows.Forms.Button();
             this.SetupMode_Button = new System.Windows.Forms.Button();
-            this.ItemDataGroupBox = new System.Windows.Forms.GroupBox();
+            this.ItemData_GroupBox = new System.Windows.Forms.GroupBox();
             this.CheckCardData_Button = new System.Windows.Forms.Button();
             this.ReferenceNumber_TextBox = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
@@ -130,7 +130,7 @@
             this.NotApplicableGridView = new System.Windows.Forms.DataGridView();
             this.OPC_Timer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.UserProgramGridView)).BeginInit();
-            this.ItemDataGroupBox.SuspendLayout();
+            this.ItemData_GroupBox.SuspendLayout();
             this.JobData_GroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ScheduleGridView)).BeginInit();
             this.Component_GroupBox.SuspendLayout();
@@ -438,31 +438,31 @@
             this.SetupMode_Button.UseVisualStyleBackColor = true;
             this.SetupMode_Button.Click += new System.EventHandler(this.SetupMode_Button_Click);
             // 
-            // ItemDataGroupBox
+            // ItemData_GroupBox
             // 
-            this.ItemDataGroupBox.BackColor = System.Drawing.Color.LightGray;
-            this.ItemDataGroupBox.Controls.Add(this.CheckCardData_Button);
-            this.ItemDataGroupBox.Controls.Add(this.ReferenceNumber_TextBox);
-            this.ItemDataGroupBox.Controls.Add(this.label13);
-            this.ItemDataGroupBox.Controls.Add(this.Sequence_TextBox);
-            this.ItemDataGroupBox.Controls.Add(this.ViewSetupCard_Button);
-            this.ItemDataGroupBox.Controls.Add(this.label22);
-            this.ItemDataGroupBox.Controls.Add(this.label17);
-            this.ItemDataGroupBox.Controls.Add(this.JobID_TextBox);
-            this.ItemDataGroupBox.Controls.Add(this.Fixture_TextBox);
-            this.ItemDataGroupBox.Controls.Add(this.label16);
-            this.ItemDataGroupBox.Controls.Add(this.Item_Label);
-            this.ItemDataGroupBox.Controls.Add(this.ViewPrint_Button);
-            this.ItemDataGroupBox.Controls.Add(this.ItemID_TextBox);
-            this.ItemDataGroupBox.Controls.Add(this.label21);
-            this.ItemDataGroupBox.Controls.Add(this.FixtureLocation_TextBox);
-            this.ItemDataGroupBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F);
-            this.ItemDataGroupBox.Location = new System.Drawing.Point(14, 81);
-            this.ItemDataGroupBox.Name = "ItemDataGroupBox";
-            this.ItemDataGroupBox.Size = new System.Drawing.Size(813, 256);
-            this.ItemDataGroupBox.TabIndex = 173;
-            this.ItemDataGroupBox.TabStop = false;
-            this.ItemDataGroupBox.Text = "Item Data";
+            this.ItemData_GroupBox.BackColor = System.Drawing.Color.LightGray;
+            this.ItemData_GroupBox.Controls.Add(this.CheckCardData_Button);
+            this.ItemData_GroupBox.Controls.Add(this.ReferenceNumber_TextBox);
+            this.ItemData_GroupBox.Controls.Add(this.label13);
+            this.ItemData_GroupBox.Controls.Add(this.Sequence_TextBox);
+            this.ItemData_GroupBox.Controls.Add(this.ViewSetupCard_Button);
+            this.ItemData_GroupBox.Controls.Add(this.label22);
+            this.ItemData_GroupBox.Controls.Add(this.label17);
+            this.ItemData_GroupBox.Controls.Add(this.JobID_TextBox);
+            this.ItemData_GroupBox.Controls.Add(this.Fixture_TextBox);
+            this.ItemData_GroupBox.Controls.Add(this.label16);
+            this.ItemData_GroupBox.Controls.Add(this.Item_Label);
+            this.ItemData_GroupBox.Controls.Add(this.ViewPrint_Button);
+            this.ItemData_GroupBox.Controls.Add(this.ItemID_TextBox);
+            this.ItemData_GroupBox.Controls.Add(this.label21);
+            this.ItemData_GroupBox.Controls.Add(this.FixtureLocation_TextBox);
+            this.ItemData_GroupBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F);
+            this.ItemData_GroupBox.Location = new System.Drawing.Point(14, 81);
+            this.ItemData_GroupBox.Name = "ItemData_GroupBox";
+            this.ItemData_GroupBox.Size = new System.Drawing.Size(813, 256);
+            this.ItemData_GroupBox.TabIndex = 173;
+            this.ItemData_GroupBox.TabStop = false;
+            this.ItemData_GroupBox.Text = "Item Data";
             // 
             // CheckCardData_Button
             // 
@@ -1267,6 +1267,7 @@
             this.Fault_TextBox.Name = "Fault_TextBox";
             this.Fault_TextBox.Size = new System.Drawing.Size(100, 20);
             this.Fault_TextBox.TabIndex = 227;
+            this.Fault_TextBox.Visible = false;
             // 
             // NotApplicableGridView
             // 
@@ -1317,7 +1318,7 @@
             this.Controls.Add(this.JobData_GroupBox);
             this.Controls.Add(this.ViewSchedule_Button);
             this.Controls.Add(this.ScheduleGridView);
-            this.Controls.Add(this.ItemDataGroupBox);
+            this.Controls.Add(this.ItemData_GroupBox);
             this.Controls.Add(this.label26);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.LiveRunTime_TextBox);
@@ -1337,8 +1338,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.User_Program_FormClosing);
             this.Load += new System.EventHandler(this.User_Program_Load);
             ((System.ComponentModel.ISupportInitialize)(this.UserProgramGridView)).EndInit();
-            this.ItemDataGroupBox.ResumeLayout(false);
-            this.ItemDataGroupBox.PerformLayout();
+            this.ItemData_GroupBox.ResumeLayout(false);
+            this.ItemData_GroupBox.PerformLayout();
             this.JobData_GroupBox.ResumeLayout(false);
             this.JobData_GroupBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ScheduleGridView)).EndInit();
@@ -1376,7 +1377,7 @@
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.TextBox LiveRunTime_TextBox;
         private System.Windows.Forms.Button RunMode_Button;
-        private System.Windows.Forms.GroupBox ItemDataGroupBox;
+        private System.Windows.Forms.GroupBox ItemData_GroupBox;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox FixtureLocation_TextBox;
         private System.Windows.Forms.DataGridView ScheduleGridView;

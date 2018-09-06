@@ -489,54 +489,13 @@ namespace DMP_Spot_Weld_Application
 
         private void StartNewJob_Button_Click(object sender, EventArgs e)
         {
-            StartNewJob_OPC();
-            ClearForm();
+            StartNewJob_OPC();  // Set Inputs in PLC to Start New Job
+            ClearForm();        // Clear TextBoxes
             ItemID_TextBox.ReadOnly = false;
             ItemID_TextBox.Focus();
-            PartsRunProgressBar.Value = 0;
-            StartNewJob_Button.BackColor = ScanRunModeColor;
+            StartNewJob_Button.BackColor = ScanRunModeColor; 
             RunMode_Button.BackColor = Color.Transparent;
             SetupMode_Button.BackColor = Color.Transparent;
-        }
-
-        private void RunMode_Button_Click(object sender, EventArgs e)
-        {
-            SetupModeSet_TextBox.Clear();
-            //OPC_Timer.Enabled = true; // No longer in use
-            //OPCStatus_Timer.Enabled = true;
-            OPC_RunModeIntValue = 1;
-            SystemInRunMode_OPC();
-            SetupModeStopWatch.Stop();
-            RunModeStopWatch.Start();
-            TeachSensor_Button.Enabled = true;
-            JobEnd_Button.Enabled = true;
-            JobEnd_Button.Visible = true;
-            CancelRun_Button.Enabled = false;
-            CancelRun_Button.Visible = false;
-            PartsRunProgressBar.Visible = true;
-            //HMI_NotActive_TextBox.Visible = false;
-            //JobStartTime = Clock_TextBox.Text;
-            Timer.Enabled = true;
-            string StartingTime = Clock_TextBox.Text;
-            string ReplaceTime = DateTime.Today.ToShortDateString();
-            //JobStartTime_TextBox.Text = StartingTime.Replace("   " + ReplaceTime, "");
-            //RunMode_Button.Enabled = false;
-            StartNewJob_Button.Enabled = false;
-            ResetWeldCount_Button.Enabled = true;
-            ResetWeldCount_Button.Visible = true;
-            StartNewJob_Button.BackColor = Color.Transparent;
-            RunMode_Button.BackColor = ScanRunModeColor;
-            SetupMode_Button.BackColor = Color.Transparent;
-            //PartCounterOPC.RunWorkerAsync();
-            //PartsCompleted_OPC(null, null);
-            if (RunMode_Button_Clicked == false)
-            {
-                JobStartTime_TextBox.Text = StartingTime.Replace("   " + ReplaceTime, "");
-                RunMode_Button_Clicked = true;
-            }
-            RunMode_Button_Clicked = true;
-            //PartComplete_GroupRead.SetEnabled(true);
-            PartsComplete_Activate = true;
         }
 
         private void TeachSensor_Button_Click(object sender, EventArgs e)
@@ -547,35 +506,81 @@ namespace DMP_Spot_Weld_Application
             User_Program_Teach_Senson TS = new User_Program_Teach_Senson(this);
             if (TS.ShowDialog(this) == DialogResult.Yes)
             {
-                OperationInitialize();
-                SetupMode_Button_Click(null, null);
+                OperationInitialize(); // SQL and Job Data Begins to Collect
+                SetupMode_Button.PerformClick();
                 SetupMode_Button.Focus();
-                PartsComplete_Activate = true;
-                PartCounterOPC.RunWorkerAsync();
+                PartsComplete_Activate = true; // Data Change Event Starts
+                PartCounterOPC.RunWorkerAsync(); // Activate Data Change Event
             }
         }
 
+        private void RunMode_Button_Click(object sender, EventArgs e)
+        {
+            SetupModeSet_TextBox.Clear();
+
+            // Put System into Run Mode
+            OPC_RunModeIntValue = 1;
+            SystemInRunMode_OPC();
+            
+            // Button Actions
+            StartNewJob_Button.Enabled = false; // Disabled Until End Job is Clicked
+            TeachSensor_Button.Enabled = true; // Can Be Clicked 
+            JobEnd_Button.Enabled = true;      // Replace CancelRun Button 
+            JobEnd_Button.Visible = true;
+            CancelRun_Button.Enabled = false;
+            CancelRun_Button.Visible = false;
+            ResetWeldCount_Button.Enabled = true;
+            ResetWeldCount_Button.Visible = true;
+            StartNewJob_Button.BackColor = Color.Transparent;
+            RunMode_Button.BackColor = ScanRunModeColor;
+            SetupMode_Button.BackColor = Color.Transparent;
+            PartsRunProgressBar.Visible = true; // Show Progress Bar
+
+
+            SetupModeStopWatch.Stop();
+            RunModeStopWatch.Start();
+            Timer.Enabled = true; // RunningStatistics() Start
+
+            string StartingTime = Clock_TextBox.Text;
+            string ShortDate = DateTime.Today.ToShortDateString();
+                        
+            if (RunMode_Button_Clicked == false)
+            {
+                JobStartTime_TextBox.Text = StartingTime.Replace("   " + ShortDate, "");
+                //RunMode_Button_Clicked = true;
+            }
+            RunMode_Button_Clicked = true; // 
+            PartsComplete_Activate = true; // Data Change Event Starts
+        }
+        
+
         public void SetupMode_Button_Click(object sender, EventArgs e)
         {
-            // OPC_Timer.Enabled = false; No longer in use
             SystemInSetupMode_OPC();
+            // Not Sure? 
             OPC_RunModeIntValue = 0;
+            //
+
             ResetWeldCount_Button.Visible = true;
             RunMode_Button.Enabled = true;
-            //SetupMode_Button.Enabled = false;
-            Timer.Enabled = false;
-            RunModeStopWatch.Stop();
-            SetupModeStopWatch.Start();
             StartNewJob_Button.BackColor = Color.Transparent;
             SetupMode_Button.BackColor = Color.Yellow;
             RunMode_Button.BackColor = Color.Transparent;
+
+            // Not Sure
             SetupMode_Button_Clicked = true;
-            // PartComplete_GroupRead.SetEnabled(false);
+
+            Timer.Enabled = false;  // RunningStatistics() Stop
+            RunModeStopWatch.Stop();
+            SetupModeStopWatch.Start();
+            
         }
 
         private void CancelRun_Button_Click(object sender, EventArgs e)
         {
             ClearForm();
+
+            // Button Settings
             RunMode_Button.BackColor = Color.Transparent;
             SetupMode_Button.BackColor = Color.Transparent;
             StartNewJob_Button.Enabled = true;
@@ -589,9 +594,14 @@ namespace DMP_Spot_Weld_Application
         private void JobEnd_Button_Click(object sender, EventArgs e)
         {
             // OPC_Timer.Enabled = false; no longer in use
-            PartsComplete_Activate = false;
+
+            PartsComplete_Activate = false; // Stop Data Read
+
+            // Turn off Run Mode
             OPC_RunModeIntValue = 0;
             SystemInRunMode_OPC();
+
+            // Button Settings
             StartNewJob_Button.Enabled = true;
             TeachSensor_Button.Enabled = false;
             RunMode_Button.Enabled = false;
@@ -602,11 +612,14 @@ namespace DMP_Spot_Weld_Application
             ResetWeldCount_Button.Visible = false;
             RunMode_Button.BackColor = Color.Transparent;
             SetupMode_Button.BackColor = Color.Transparent;
-            SetupModeStopWatch.Stop();
+
             RunMode_Button_Clicked = false;
             SetupMode_Button_Clicked = false;
+
+            SetupModeStopWatch.Stop();
             JobEndTime = Clock_TextBox.Text;
-            ItemOperationCalculation();
+
+            ItemOperationCalculation(); // Calculate
             FindTotalRunTime();
             OperationOEECalculation();
             OperationOEEData_SQL();
@@ -1128,27 +1141,28 @@ namespace DMP_Spot_Weld_Application
             StartNewJob_Button.Enabled = true;
         }
 
+        // Set the Tag Values and Turn on the PLC Inputs to Scan a New Job
         private void StartNewJob_OPC()
         {
             try
             {                
                 Opc.Da.Item[] OPC_StartNewJob = new Opc.Da.Item[8];
                 OPC_StartNewJob[0] = new Opc.Da.Item();
-                OPC_StartNewJob[0].ItemName = SpotWeld_TagID + "HMI_PB_New_Job";
+                OPC_StartNewJob[0].ItemName = SpotWeld_TagID + "HMI_PB_New_Job";            // Turn On
                 OPC_StartNewJob[1] = new Opc.Da.Item();
-                OPC_StartNewJob[1].ItemName = SpotWeld_TagID + "HMI_Operation_One_PB";
+                OPC_StartNewJob[1].ItemName = SpotWeld_TagID + "HMI_Operation_One_PB";      // Turn Off
                 OPC_StartNewJob[2] = new Opc.Da.Item();
-                OPC_StartNewJob[2].ItemName = SpotWeld_TagID + "HMI_Operation_Two_PB";
+                OPC_StartNewJob[2].ItemName = SpotWeld_TagID + "HMI_Operation_Two_PB";      // Turn Off
                 OPC_StartNewJob[3] = new Opc.Da.Item();
-                OPC_StartNewJob[3].ItemName = SpotWeld_TagID + "HMI_Operation_Three_PB";
+                OPC_StartNewJob[3].ItemName = SpotWeld_TagID + "HMI_Operation_Three_PB";    // Turn Off
                 OPC_StartNewJob[4] = new Opc.Da.Item();
-                OPC_StartNewJob[4].ItemName = SpotWeld_TagID + "HMI_Operation_Four_PB";
+                OPC_StartNewJob[4].ItemName = SpotWeld_TagID + "HMI_Operation_Four_PB";     // Turn Off
                 OPC_StartNewJob[5] = new Opc.Da.Item();
-                OPC_StartNewJob[5].ItemName = SpotWeld_TagID + "HMI_PB_SCAN_NEW_PART";
+                OPC_StartNewJob[5].ItemName = SpotWeld_TagID + "HMI_PB_SCAN_NEW_PART";      // Turn On
                 OPC_StartNewJob[6] = new Opc.Da.Item();
-                OPC_StartNewJob[6].ItemName = SpotWeld_TagID + "RUN_TEACH_MODE_TOGGLE_BIT";
+                OPC_StartNewJob[6].ItemName = SpotWeld_TagID + "RUN_TEACH_MODE_TOGGLE_BIT"; // Turn On
                 OPC_StartNewJob[7] = new Opc.Da.Item();
-                OPC_StartNewJob[7].ItemName = SpotWeld_TagID + "SYSTEM_IN_RUN_MODE";
+                OPC_StartNewJob[7].ItemName = SpotWeld_TagID + "SYSTEM_IN_RUN_MODE";        // Turn Off
                 OPC_StartNewJob = StartNewJob_Write.AddItems(OPC_StartNewJob);
                 
                 Opc.Da.ItemValue[] OPC_StartNewJobValue = new Opc.Da.ItemValue[8];
@@ -1341,6 +1355,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
+        // 
         private void PartsCompleted_OPC(object sender, EventArgs e)
         {
             try
@@ -1382,7 +1397,7 @@ namespace DMP_Spot_Weld_Application
             }
         }
 
-
+        // 
         void PartCompleted_GroupRead_DataChanged(object subscriptionHandle, object requestHandle, ItemValueResult[] values)
         {
             if(PartsComplete_Activate == true)
@@ -2150,6 +2165,7 @@ namespace DMP_Spot_Weld_Application
             ItemSetupTime = (float)Math.Round(ItemSetupTime, 5);
         }
 
+        // Called From End Job
         private void ItemOperationCalculation()
         {
             /*********************************************************************************************************************
@@ -2170,17 +2186,18 @@ namespace DMP_Spot_Weld_Application
             *                                |                                       |
             *********************************************************************************************************************/
 
+            // Convert The Current Parts Formed to double
             string CurrentPartsFormed_String = PartsFormed_TextBox.Text;
             double CurrentPartsFormed_Double = double.Parse(CurrentPartsFormed_String);
 
+            // add the total parts of this item to the current run
             if (PartsManufacturedTotal_String != "")
             {
                 PartsManufacturedTotal_Double = double.Parse(PartsManufacturedTotal_String);
-            }
-
+            }            
             TotalItemPartsManufactured = CurrentPartsFormed_Double + PartsManufacturedTotal_Double;
 
-            //Current PPM
+            // Current PPM
             string CurrentPPM_String = CurrentPPM_TextBox.Text;
             float CurrentPartsFormed_Float = (float)CurrentPartsFormed_Double;
             float CurrentPPM = float.Parse(CurrentPPM_String);
@@ -2188,7 +2205,6 @@ namespace DMP_Spot_Weld_Application
             float CurrentRunTime = CurrentPartsFormed_Float / CurrentPPM;
 
             //Past PPM
-
             if (AveragePPM_String == "")
             {
                 AveragePPM = CurrentPPM;
@@ -2485,13 +2501,47 @@ namespace DMP_Spot_Weld_Application
             SpotWeld_ComboBox.Enabled = false;
         }
 
+        // Called When StartNewJob_Button is Clicked
         private void ClearForm()
         {
+            // Clear Each TextBox
+            //ItemID_TextBox, JobID_TextBox, Sequence_TextBox, ReferenceNumber_TextBox, Fixture_TextBox, FixtureLocation_TextBox 
+            foreach (Control TextBox_Clear in ItemData_GroupBox.Controls)
+            {
+                if(TextBox_Clear is TextBox)
+                {
+                    TextBox_Clear.Text = "";
+                }
+            }
+            // Comp1_TextBox, Comp2_TextBox,Comp3_TextBox, Comp4_TextBox, Quantity1_TextBox, Quantity2_TextBox, Quantity3_TextBox, Quantity4_TextBox
+            foreach (Control TextBox_Clear in Component_GroupBox.Controls)
+            {
+                if (TextBox_Clear is TextBox)
+                {
+                    TextBox_Clear.Text = "";
+                }
+            }
+            // PartsNeeded_TextBox, PartsFormed_TextBox, PartsRemaining_TextBox, CurrentPPM_TextBox
+            // JobStartTime_TextBox, JobEndTime_TextBox, CurrentItemID_TextBox, CurrentWeld_TextBox, TotalWeldsNeeded_TextBox
+            foreach (Control TextBox_Clear in JobData_GroupBox.Controls)
+            {
+                if (TextBox_Clear is TextBox)
+                {
+                    TextBox_Clear.Text = "";
+                }
+            }
+                        
             JobFound = false;
+            ViewSetupCard_Button.Enabled = false;
+            PartsRunProgressBar.Value = 0;
+
+            /*
             ItemID_TextBox.Clear();
             JobID_TextBox.Clear();
             Fixture_TextBox.Clear();
             FixtureLocation_TextBox.Clear();
+            Sequence_TextBox.Clear();
+            ReferenceNumber_TextBox.Clear();
             Comp1_TextBox.Clear();
             Comp2_TextBox.Clear();
             Comp3_TextBox.Clear();
@@ -2509,11 +2559,9 @@ namespace DMP_Spot_Weld_Application
             JobEndTime_TextBox.Clear();
             TimeRemaining_TextBox.Clear();
             CurrentItemID_TextBox.Clear();
-            Sequence_TextBox.Clear();
-            ReferenceNumber_TextBox.Clear();
             CurrentWeld_TextBox.Clear();
             TotalWeldsNeeded_TextBox.Clear();
-            ViewSetupCard_Button.Enabled = false;
+            */
         }
 
         public void PassOperationValue(int SelectedOperation)

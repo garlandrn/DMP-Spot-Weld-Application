@@ -177,11 +177,11 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Bold);
-            this.label12.Location = new System.Drawing.Point(507, 90);
+            this.label12.Location = new System.Drawing.Point(496, 90);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(130, 29);
+            this.label12.Size = new System.Drawing.Size(141, 29);
             this.label12.TabIndex = 116;
-            this.label12.Text = "Spotweld:";
+            this.label12.Text = "Spot Weld:";
             // 
             // DateStartPicker
             // 
